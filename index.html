@@ -1,0 +1,1181 @@
+<title>Apex Meeting Briefs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: pit-wall split — meeting list rail on the left, brief on the right; a second view regroups every deliverable like a task board. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --sunk:#e9edf3; --line:#d5dbe5; --fg:#141a26; --muted:#5b6578;
+  --accent:#1f3fd1; --accent-soft:#e3e8fc; --accent-fg:#ffffff;
+  --ok:#17804a; --ok-soft:#dcf2e5; --warn:#a86a00; --warn-soft:#fbeccc; --bad:#c2322b; --bad-soft:#fbe1df; --idle:#5b6578; --idle-soft:#e6e9ef; --violet:#7b3fc4; --violet-soft:#efe4fb;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#171c27; --sunk:#1e2533; --line:#2c3445; --fg:#e7ebf3; --muted:#9aa4b8;
+  --accent:#7d95ff; --accent-soft:#232c4d; --accent-fg:#0f131b;
+  --ok:#5fd394; --ok-soft:#173527; --warn:#f2b84b; --warn-soft:#3a2d12; --bad:#ff7d74; --bad-soft:#3d1c1a; --idle:#a5afc2; --idle-soft:#262d3b; --violet:#c49bff; --violet-soft:#2d2243;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#171c27; --sunk:#1e2533; --line:#2c3445; --fg:#e7ebf3; --muted:#9aa4b8;
+  --accent:#7d95ff; --accent-soft:#232c4d; --accent-fg:#0f131b;
+  --ok:#5fd394; --ok-soft:#173527; --warn:#f2b84b; --warn-soft:#3a2d12; --bad:#ff7d74; --bad-soft:#3d1c1a; --idle:#a5afc2; --idle-soft:#262d3b; --violet:#c49bff; --violet-soft:#2d2243;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-family:var(--f-display);font-size:22px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.brand span{font-size:13px;color:var(--muted)}
+.tabs{display:flex;gap:4px;margin-left:auto;background:var(--sunk);padding:3px;border-radius:999px;overflow-x:auto;max-width:100%}
+.tabs button{white-space:nowrap}
+.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:999px;cursor:pointer;font-weight:500;font-size:14px;display:flex;gap:6px;align-items:center}
+.tabs button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.count{font-family:var(--f-mono);font-size:12px;background:var(--accent);color:var(--accent-fg);border-radius:999px;padding:0 7px}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-block:18px}
+.kpi{background:var(--surface);padding:12px 14px}
+.kpi .v{font-family:var(--f-display);font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi.alert .v{color:var(--bad)}
+.asof{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+
+/* layout */
+.split{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:1fr}}
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);max-height:calc(100vh - 90px);display:flex;flex-direction:column}
+@media (max-width:860px){.rail{position:static;max-height:none}}
+.rail-head{padding:12px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.inp,select.inp{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:6px 8px;font-size:13px}
+.mlist{list-style:none;margin:0;padding:6px;overflow:auto}
+.mlist li button{width:100%;text-align:left;border:0;background:transparent;border-radius:6px;padding:9px 10px;cursor:pointer;display:grid;gap:3px}
+.mlist li button:hover{background:var(--sunk)}
+.mlist li button[aria-current="true"]{background:var(--accent-soft)}
+.mlist .mt{font-weight:600;font-size:14px;line-height:1.3}
+.mlist .mm{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.empty{padding:16px;color:var(--muted);font-size:14px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.type{background:var(--violet-soft);color:var(--violet)}
+.chip.co{font-family:var(--f-mono);font-size:11px;letter-spacing:.03em}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* brief */
+.brief{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;min-width:0}
+@media (max-width:500px){.brief{padding:18px 16px}}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1.title{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1.05;margin:6px 0 8px;text-wrap:balance;letter-spacing:.01em}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted)}
+.meta .when{font-family:var(--f-mono);color:var(--fg)}
+.tags{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0 4px;font-size:13px}
+.tags dt{color:var(--muted)}
+.tags dd{margin:0;display:flex;gap:6px;flex-wrap:wrap}
+.tldr{margin:18px 0 6px;padding:14px 16px;background:var(--accent-soft);border-radius:var(--r);display:grid;gap:4px}
+.tldr .eyebrow{color:var(--accent)}
+.tldr p{margin:0;font-size:15.5px;font-weight:500;max-width:70ch}
+h2.sec{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin:26px 0 8px;display:flex;align-items:center;gap:8px}
+h2.sec small{font-family:var(--f-body);text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
+.prose{max-width:72ch;margin:0}
+ul.pts{margin:0;padding-left:20px;max-width:72ch;display:grid;gap:5px}
+ul.pts li::marker{color:var(--accent)}
+.cond{font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 6px;margin-left:4px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:700px){.cols{grid-template-columns:1fr}}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px}
+th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--sunk);padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.task{min-width:220px}
+.owner{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.av{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:10px;font-weight:600;display:grid;place-items:center;flex:none}
+.av.none{background:var(--bad-soft);color:var(--bad)}
+.unassigned{color:var(--bad);font-weight:500}
+.due{font-family:var(--f-mono);font-size:12.5px;white-space:nowrap;display:grid;gap:3px;justify-items:start}
+.due .vague{font-family:var(--f-body);font-size:12px;color:var(--muted)}
+select.status{border:1px solid transparent;border-radius:999px;padding:3px 24px 3px 10px;font-size:12.5px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;background-repeat:no-repeat;background-position:right 8px center;background-size:9px;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-size:4px 4px,4px 4px;background-position:right 12px center,right 8px center}
+select.status[data-s="Not started"]{background-color:var(--idle-soft);color:var(--idle)}
+select.status[data-s="In progress"]{background-color:var(--warn-soft);color:var(--warn)}
+select.status[data-s="Done"]{background-color:var(--ok-soft);color:var(--ok)}
+select.status[data-s="Blocked"]{background-color:var(--bad-soft);color:var(--bad)}
+select.status option{background:var(--surface);color:var(--fg)}
+textarea.remark{width:100%;min-width:180px;min-height:32px;resize:vertical;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:5px 8px;font-size:13px;line-height:1.4}
+tr.done .tasktext{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+
+/* comments */
+.comments{display:grid;gap:10px;max-width:72ch}
+.cmt{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.cmt .body{background:var(--sunk);border-radius:var(--r);padding:8px 12px;min-width:0}
+.cmt .who{font-size:13px;font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.cmt .who time{font-weight:400;color:var(--muted);font-size:12px;font-family:var(--f-mono)}
+.cmt p{margin:2px 0 0;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.cmt .del{border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0;margin-left:auto}
+form.newc{display:grid;gap:8px;grid-template-columns:160px 1fr auto;align-items:start}
+@media (max-width:600px){form.newc{grid-template-columns:1fr}}
+.btn{border:0;background:var(--accent);color:var(--accent-fg);font-weight:600;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:13.5px}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+
+/* transcript */
+details.tx{margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+details.tx summary{cursor:pointer;font-family:var(--f-display);font-size:18px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.txlines{margin-top:10px;display:grid;gap:6px;max-height:420px;overflow:auto;padding-right:6px}
+.txl{display:grid;grid-template-columns:52px 1fr;gap:8px;font-size:13.5px}
+.txl time{font-family:var(--f-mono);color:var(--muted);font-size:12px;padding-top:2px}
+.txl b{font-weight:600}
+
+/* deliverables board */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
+.toolbar .inp{width:auto;min-width:0}
+.toolbar .search{flex:1 1 220px}
+.toolbar label.chk{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--bg);padding:6px 10px;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.seg-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.group>button.gh{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:10px 14px;cursor:pointer;text-align:left}
+.group>button.gh:hover{background:var(--sunk)}
+.chev{transition:transform .15s;color:var(--muted);flex:none}
+.group[data-open="false"] .chev{transform:rotate(-90deg)}
+.group[data-open="false"] .gbody{display:none}
+.gh .gt{font-weight:600}
+.gh .gd{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.gh .gc{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.bar{height:4px;width:70px;background:var(--sunk);border-radius:2px;overflow:hidden;flex:none}
+.bar i{display:block;height:100%;background:var(--ok)}
+.gbody .tbl-wrap{border:0;border-top:1px solid var(--line);border-radius:0}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:12px;text-align:left}
+.subgroup td{background:var(--bg);font-size:12px;font-weight:600;color:var(--muted);padding:6px 10px}
+
+
+/* team */
+.chip.team{background:var(--accent-soft);color:var(--accent)}
+.chip.ext{background:var(--idle-soft);color:var(--idle)}
+.ownsel{display:grid;gap:4px;justify-items:start}
+select.owner-select{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:4px 6px;font-size:13px;max-width:190px}
+select.owner-select.none{color:var(--bad);border-color:var(--bad)}
+.tbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:16px;display:grid;gap:12px}
+.panel h3{margin:0;font-family:var(--f-display);font-size:20px;text-transform:uppercase;letter-spacing:.03em}
+.panel p{margin:0;color:var(--muted);font-size:13.5px;max-width:72ch}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px}
+.roster label{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:6px;background:var(--bg);font-size:13.5px;cursor:pointer}
+.roster label small{color:var(--muted);font-size:12px;display:block}
+.addrow{display:flex;gap:8px;flex-wrap:wrap}
+.addrow .inp{flex:1 1 200px;width:auto}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px;min-width:0}
+.pcard .ph{display:flex;gap:10px;align-items:center}
+.pcard .ph .av{width:34px;height:34px;font-size:13px}
+.pcard .pn{font-weight:600}
+.pcard .pr{font-size:12.5px;color:var(--muted)}
+.pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-radius:6px;overflow:hidden}
+.pstats div{background:var(--bg);padding:6px 8px}
+.pstats b{display:block;font-family:var(--f-display);font-size:22px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.pstats span{font-size:11px;color:var(--muted)}
+.pstats .alert b{color:var(--bad)}
+.pbar{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--ok)}
+.plist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.plist li{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:13.5px;padding:7px 0;border-top:1px solid var(--line)}
+.plist li .from{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.plist .sp{font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap;align-self:start}
+.sp[data-s="Not started"]{background:var(--idle-soft);color:var(--idle)}
+.sp[data-s="In progress"]{background:var(--warn-soft);color:var(--warn)}
+.sp[data-s="Blocked"]{background:var(--bad-soft);color:var(--bad)}
+.sp[data-s="Done"]{background:var(--ok-soft);color:var(--ok)}
+.sechead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 10px}
+.sechead h2{margin:0;font-family:var(--f-display);font-size:24px;text-transform:uppercase;letter-spacing:.03em}
+.sechead span{color:var(--muted);font-size:13px}
+.othertbl td,.othertbl th{white-space:nowrap}
+.othertbl{min-width:520px}
+
+/* tag editing */
+.taghead{display:flex;align-items:center;gap:10px;margin-top:14px}
+.taghead .edited{font-size:12px;color:var(--muted)}
+.chip .x{border:0;background:none;color:inherit;cursor:pointer;padding:0 0 0 2px;font-size:13px;line-height:1;opacity:.7}
+.chip .x:hover{opacity:1}
+.tagadd{display:inline-flex;gap:4px}
+.tagadd input{border:1px dashed var(--line);background:var(--bg);border-radius:999px;padding:1px 10px;font-size:12px;width:170px}
+.tagadd button{border:0;background:var(--accent);color:var(--accent-fg);border-radius:999px;font-size:12px;padding:1px 10px;cursor:pointer}
+.tags.editing{background:var(--bg);border:1px dashed var(--line);border-radius:var(--r);padding:10px 12px}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0}
+
+/* projects */
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.subnav button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;font-size:13.5px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center}
+.subnav button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pill[data-p="Pending review"]{background:var(--violet-soft);color:var(--violet)}
+.pill[data-p="Needs info"]{background:var(--warn-soft);color:var(--warn)}
+.pill[data-p="Declined"]{background:var(--bad-soft);color:var(--bad)}
+.pill[data-p="Planning"]{background:var(--idle-soft);color:var(--idle)}
+.pill[data-p="In progress"],.pill[data-p="Testing"]{background:var(--accent-soft);color:var(--accent)}
+.pill[data-p="Closed"]{background:var(--ok-soft);color:var(--ok)}
+.pid{font-family:var(--f-mono);font-size:12.5px;white-space:nowrap}
+tr.rowlink{cursor:pointer}
+tr.rowlink:hover td{background:var(--bg)}
+.kbar{position:relative;height:8px;background:var(--sunk);border-radius:4px;min-width:90px}
+.kbar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--ok)}
+.kbar.partial i{background:var(--warn)}
+.ktxt{font-size:12px;color:var(--muted);white-space:nowrap}
+.pgrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.pgrid{grid-template-columns:1fr}}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:12px;min-width:0}
+.box h3{margin:0;font-family:var(--f-display);font-size:19px;text-transform:uppercase;letter-spacing:.03em;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.box h3 small{font-family:var(--f-body);text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:400;color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0}
+.stepper{display:flex;gap:0;list-style:none;margin:0;padding:0;overflow-x:auto}
+.stepper li{flex:1 1 0;min-width:84px;display:grid;gap:6px;font-size:12px;color:var(--muted);text-align:center;position:relative;padding-top:18px}
+.stepper li::before{content:"";position:absolute;top:5px;left:0;right:0;height:3px;background:var(--line)}
+.stepper li::after{content:"";position:absolute;top:0;left:calc(50% - 6.5px);width:13px;height:13px;border-radius:50%;background:var(--surface);border:3px solid var(--line);box-sizing:border-box}
+.stepper li.done::before,.stepper li.done::after{background:var(--ok);border-color:var(--ok)}
+.stepper li.now::after{border-color:var(--accent);background:var(--accent)}
+.stepper li.now{color:var(--fg);font-weight:600}
+.stepper li.stop::after{border-color:var(--bad);background:var(--bad)}
+.kpibig{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:6px;overflow:hidden}
+.kpibig div{background:var(--bg);padding:10px 12px}
+.kpibig b{display:block;font-family:var(--f-display);font-size:26px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpibig span{font-size:11.5px;color:var(--muted)}
+.verdict{font-size:13px;font-weight:600;border-radius:6px;padding:6px 10px}
+.verdict.ok{background:var(--ok-soft);color:var(--ok)}
+.verdict.mid{background:var(--warn-soft);color:var(--warn)}
+.verdict.none{background:var(--idle-soft);color:var(--idle)}
+.flist{list-style:none;margin:0;padding:0;display:grid}
+.flist li{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;flex-wrap:wrap}
+.flist li:first-child{border-top:0}
+.flist .fn{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.flist .fd{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.flist label{font-size:12px;color:var(--muted);display:flex;gap:4px;align-items:center}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+.log li{display:grid;grid-template-columns:92px 1fr;gap:8px;font-size:13px}
+.log time{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);padding-top:1px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+@media (max-width:640px){.fgrid{grid-template-columns:1fr}}
+.field{display:grid;gap:4px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-size:13px;font-weight:600}
+.field .help{font-size:12px;color:var(--muted)}
+.field .inp{font-size:14px;padding:8px 10px}
+textarea.inp{resize:vertical;min-height:70px}
+.formsec{grid-column:1/-1;font-family:var(--f-display);font-size:17px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.err{color:var(--bad);font-size:13px;font-weight:500}
+.notice{background:var(--sunk);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--muted)}
+.confirm{background:var(--ok-soft);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px}
+.confirm b{color:var(--ok)}
+.codebox{font-family:var(--f-mono);font-size:16px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px;display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn.ok{background:var(--ok);color:var(--surface)}
+.btn.warnb{background:var(--warn);color:var(--surface)}
+.btn.badb{background:var(--bad);color:var(--surface)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.queue{display:grid;gap:10px}
+.qcard{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--violet);border-radius:var(--r);padding:12px 14px;display:grid;gap:6px}
+.qcard.info{border-left-color:var(--warn)}
+.qcard .qt{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.qcard .qt b{font-size:15px}
+.qcard p{margin:0;font-size:13.5px;color:var(--muted);max-width:80ch}
+.back{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:13.5px;margin-bottom:10px}
+.ptitle{font-family:var(--f-display);font-size:32px;font-weight:700;line-height:1.05;margin:4px 0 6px;text-wrap:balance}
+.lookup{max-width:560px}
+footer{margin-top:28px;font-size:12.5px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><b>Apex Motorsport</b><span>Meeting Briefs</span></div>
+    <nav class="tabs" aria-label="View">
+      <button id="tab-meetings" aria-pressed="true">Meetings</button>
+      <button id="tab-deliv" aria-pressed="false">Deliverables <span class="count" id="open-count">0</span></button>
+      <button id="tab-team" aria-pressed="false">Team summary</button>
+      <button id="tab-proj" aria-pressed="false">Projects <span class="count" id="pending-count">0</span></button>
+    </nav>
+    <button class="tbtn" id="open-team-panel" aria-expanded="false">My team <span class="count" id="team-count">0</span></button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="panel" id="team-panel" hidden aria-label="My team">
+    <h3>My team</h3>
+    <p>Tick the people on your team. Deliverables owned by them get an "Our team" tag, and you can assign any deliverable to a teammate from its owner dropdown.</p>
+    <div class="roster" id="roster"></div>
+    <form class="addrow" id="add-member">
+      <input class="inp" id="new-member" placeholder="Add someone who wasn't in a meeting (full name)" aria-label="New team member name">
+      <button class="btn" type="submit">Add to team</button>
+      <button class="btn ghost" type="button" id="close-team-panel">Done</button>
+    </form>
+  </section>
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <main id="view-meetings" class="split">
+    <aside class="rail">
+      <div class="rail-head">
+        <input class="inp" id="m-search" type="search" placeholder="Search meetings">
+        <div class="filters">
+          <select class="inp" id="f-type" aria-label="Meeting type"></select>
+          <select class="inp" id="f-co" aria-label="Company"></select>
+          <select class="inp" id="f-dept" aria-label="Department"></select>
+          <select class="inp" id="f-person" aria-label="Person"></select>
+        </div>
+      </div>
+      <ul class="mlist" id="mlist"></ul>
+    </aside>
+    <article class="brief" id="brief"></article>
+  </main>
+
+  <main id="view-deliv" hidden>
+    <div class="toolbar">
+      <input class="inp search" id="d-search" type="search" placeholder="Search deliverables or remarks">
+      <select class="inp" id="d-status" aria-label="Status"></select>
+      <select class="inp" id="d-owner" aria-label="Owner"></select>
+      <select class="inp" id="d-type" aria-label="Meeting type"></select>
+      <select class="inp" id="d-co" aria-label="Company"></select>
+      <label class="chk"><input type="checkbox" id="d-hide-done"> Hide done</label>
+      <label class="chk"><input type="checkbox" id="d-team-only"> Our team only</label>
+      <span class="seg-label">Group by</span>
+      <div class="seg" id="d-group">
+        <button data-g="meeting" aria-pressed="true">Date · Meeting</button>
+        <button data-g="owner" aria-pressed="false">Owner</button>
+        <button data-g="status" aria-pressed="false">Status</button>
+      </div>
+      <button class="btn ghost" id="d-toggle-all">Collapse all</button>
+    </div>
+    <div id="groups"></div>
+  </main>
+
+  <main id="view-team" hidden>
+    <div class="toolbar">
+      <select class="inp" id="t-type" aria-label="Meeting type"></select>
+      <select class="inp" id="t-co" aria-label="Company"></select>
+      <label class="chk"><input type="checkbox" id="t-show-done"> Show done items in lists</label>
+    </div>
+    <div id="team-view"></div>
+  </main>
+
+  <main id="view-proj" hidden>
+    <nav class="subnav" aria-label="Projects">
+      <button data-pv="register" aria-pressed="true">Project register</button>
+      <button data-pv="queue" aria-pressed="false">Approval queue <span class="count" id="queue-count">0</span></button>
+      <button data-pv="new" aria-pressed="false">New request</button>
+      <button data-pv="requester" aria-pressed="false">Requester view</button>
+    </nav>
+    <div id="proj-body"></div>
+  </main>
+
+  <footer>
+    <span>Demo data. Apex Motorsport, its people, sponsors and suppliers are fictional. Edits save in your browser only.</span>
+    <button class="btn ghost" id="reset">Reset demo</button>
+  </footer>
+</div>
+
+<script>
+const TRANSCRIPTS = {"01": "MEETING: Driver Contract Renewal — Car 7\nDATE: Monday, September 28, 2026 | 2:00–2:05 PM\nCOMPANY: Apex Racing (APR), Apex Academy (APA)\nATTENDEES: Helena Marsh (Team Principal), Marco Bellandi (Driver Manager), Sofia Lindqvist (Head of Legal), Daniel Okafor (Finance Director)\nNOTE: Fictional meeting created as portfolio sample data.\n\n---\n\n[00:00] Helena Marsh: Okay, I think everyone's here. Daniel, you're on? Good. So, one item today really, and it's Rafael. His current deal ends at the end of this season and his management want an answer by the fifteenth of October. So we need a position today, or at least a direction.\n\n[00:21] Marco Bellandi: Yeah, and just so everyone knows where he's at — I had dinner with him and his manager on Thursday. He wants to stay. He was very clear about that. But he wants two years, not one.\n\n[00:34] Helena Marsh: Two years at forty-one.\n\n[00:36] Marco Bellandi: Forty-two by the end of it, yes.\n\n[00:39] Daniel Okafor: Before we go further, can I just put the number on the table? A two-year deal at his current salary is roughly eighteen percent of the driver budget each year. That's fine on its own, but if we also want to keep the option on Mia for twenty-eight, the numbers get tight.\n\n[00:58] Helena Marsh: Right. And that's really the tension, isn't it. Rafael gives us points now. Mia is the future. I don't want to block her.\n\n[01:07] Sofia Lindqvist: Can I suggest a structure? We do one year guaranteed, plus a second-year option. The option is triggered by performance. That way he gets the two-year headline he wants, and we keep flexibility for Mia.\n\n[01:22] Marco Bellandi: He might go for that if the trigger is fair. If it looks like we're setting him up to fail, he'll walk. He's had an offer — I don't know from who, but it's real.\n\n[01:33] Helena Marsh: What would a fair trigger be?\n\n[01:36] Marco Bellandi: Honestly? Something like finishing ahead of his teammate in the championship, or a points threshold. Not podiums. The car isn't a podium car every weekend, and he knows it.\n\n[01:47] Daniel Okafor: I'd rather it's a points number. Teammate comparison gets messy if Luca has a bad run of reliability.\n\n[01:54] Sofia Lindqvist: Agreed. A points threshold is cleaner legally too. Fewer arguments about what counts.\n\n[02:01] Helena Marsh: Okay. So let me say where I think we are. We offer one year plus an option year. The option triggers on a points threshold. And the whole thing depends on him accepting that clause — if he won't accept a performance clause, we're back to a straight one-year offer. Everyone agree?\n\n[02:19] Marco Bellandi: Yes.\n\n[02:20] Daniel Okafor: Yes, subject to me checking the threshold doesn't break the budget in a good year. If he scores a lot, there are bonuses.\n\n[02:27] Sofia Lindqvist: Yes.\n\n[02:29] Helena Marsh: Good. Daniel, what do you need to check that?\n\n[02:32] Daniel Okafor: I'll model three scenarios — low, mid, high points — with the bonus structure. I can have that by Friday.\n\n[02:39] Helena Marsh: Friday the second. Great. Sofia, can you draft the clause?\n\n[02:43] Sofia Lindqvist: I'll draft the option clause and the trigger wording. I'd like Daniel's numbers first, so realistically Tuesday the sixth for a first draft.\n\n[02:51] Helena Marsh: That's fine. Marco, you manage the conversation with his side.\n\n[02:55] Marco Bellandi: Yes. I'll sound out his manager informally this week — just the structure, no numbers — so we don't surprise them. Then the formal offer goes once Sofia's draft is done.\n\n[03:06] Helena Marsh: Perfect. Now — Mia. What are we telling her?\n\n[03:10] Marco Bellandi: Nothing official yet. But she's going to read the news when Rafael's deal is announced, and she'll ask what it means for her.\n\n[03:18] Helena Marsh: Then we should talk to her before the announcement, not after. I don't want her finding out from social media.\n\n[03:24] Marco Bellandi: I can do that. Same week as the announcement.\n\n[03:27] Sofia Lindqvist: Just be careful what you promise her. We can say she's in the plans. We can't say twenty-eight is guaranteed — that's not agreed.\n\n[03:34] Marco Bellandi: Understood.\n\n[03:36] Daniel Okafor: One more thing on Mia. Her Academy contract has a renewal clause too. We should look at it sometime after the season, before the winter.\n\n[03:44] Helena Marsh: Let's note that. Sofia, is that yours?\n\n[03:47] Sofia Lindqvist: Mine, yes. I'll review it after the season. No firm date yet.\n\n[03:51] Helena Marsh: Okay. Risks — anything I'm missing?\n\n[03:54] Marco Bellandi: The other offer. If it's a top team, he might not wait for our drafting. October fifteenth is his deadline but he could decide earlier.\n\n[04:02] Helena Marsh: So we can't let the draft slip. If Tuesday becomes Friday, we lose a week we may not have.\n\n[04:07] Sofia Lindqvist: I'll hold Tuesday.\n\n[04:09] Daniel Okafor: The other risk is age, frankly. If his performance drops in the second half of next year, the option protects us. That's the point of it.\n\n[04:17] Helena Marsh: Agreed. Open question I still have — do we announce together with the sponsor renewal, or separately? Claire will have an opinion on that. Let's not decide today.\n\n[04:27] Marco Bellandi: I'll ask Claire.\n\n[04:29] Helena Marsh: Good. So to recap: one plus one with a points trigger, conditional on the clause being accepted. Daniel models scenarios by Friday. Sofia drafts by Tuesday the sixth. Marco sounds out his manager this week and speaks to Mia before the announcement. Announcement timing is open. Thanks everyone.\n\n[04:46] [Meeting ends]\n", "02": "MEETING: Post-Race Strategy Debrief — Round 18\nDATE: Tuesday, September 29, 2026 | 10:00–10:06 AM\nCOMPANY: Apex Racing (APR)\nATTENDEES: Tomás Reyes (Head of Race Strategy), Priya Nandakumar (Chief Engineer), Bea Santos (Performance Analyst), Helena Marsh (Team Principal)\nNOTE: Fictional meeting created as portfolio sample data.\n\n---\n\n[00:00] Tomás Reyes: Morning. Let's keep this tight. Round eighteen: Rafael P7, Luca P11, so one car in the points. We should've had both. I want to go through what happened on Luca's side, then agree what we change for Round nineteen.\n\n[00:15] Helena Marsh: Go ahead.\n\n[00:16] Tomás Reyes: Short version. We pitted Luca on lap twenty-two for the hard tyre. The safety car came out on lap twenty-five. Everyone who hadn't stopped got a cheap stop and jumped him. He came out P9, finished P11.\n\n[00:30] Priya Nandakumar: So it was bad luck, mainly.\n\n[00:32] Tomás Reyes: Partly. But we had a window from lap nineteen to twenty-seven, and we chose the early end. Bea, show them the chart.\n\n[00:39] Bea Santos: Sharing now. So this is the tyre degradation model versus what actually happened. The model said the mediums would fall off around lap twenty-four. In reality they held until lap twenty-nine. We were about five laps too pessimistic.\n\n[00:53] Helena Marsh: Why?\n\n[00:55] Bea Santos: Track temperature. It dropped about six degrees after the first fifteen laps because of cloud cover. The model uses the temperature at the start of the race and doesn't update it.\n\n[01:05] Priya Nandakumar: That's fixable. We have live track temperature from the sensors.\n\n[01:09] Bea Santos: Yes. I can feed it in live. It's maybe a week of work, plus testing.\n\n[01:14] Tomás Reyes: Do it. Can it be ready for Round twenty? Nineteen is this weekend, that's too soon.\n\n[01:19] Bea Santos: Round twenty, yes. I'll aim to have it tested by October ninth.\n\n[01:23] Tomás Reyes: Good. Now, for Round nineteen. My instinct is we go two-stop as the default plan. It gives us more flexibility if there's a safety car.\n\n[01:31] Priya Nandakumar: That's reasonable. Two-stop, mediums-hards-mediums.\n\n[01:35] Helena Marsh: Fine with me.\n\n[01:36] Tomás Reyes: Okay, two-stop it is.\n\n[01:38] Bea Santos: Sorry — before we lock that in. The pit lane at Round nineteen is one of the longest on the calendar. A stop costs about twenty-four seconds. The second stop basically wipes out the tyre advantage unless there's a safety car.\n\n[01:50] Priya Nandakumar: Twenty-four? I thought it was nineteen.\n\n[01:52] Bea Santos: Nineteen was last year. They moved the pit entry. It's longer now.\n\n[01:56] Tomás Reyes: Hm. Then two-stop doesn't make sense as the default. Okay, change of plan. One-stop is the default for Round nineteen, mediums to hards, and we keep two-stop only as the reactive option if there's an early safety car.\n\n[02:10] Helena Marsh: Agreed. Good catch, Bea.\n\n[02:12] Priya Nandakumar: Agreed.\n\n[02:13] Tomás Reyes: So final: one-stop default, two-stop only reactive. Let's be clear in the briefing so nobody's working off the old plan.\n\n[02:20] Priya Nandakumar: On the car side — Luca complained about rear locking into turn ten all race. That cost him tyre life too.\n\n[02:27] Tomás Reyes: Is that setup or driving?\n\n[02:29] Priya Nandakumar: Bit of both. I'll have his race engineer go through the brake balance data with him before Thursday's practice. I want a change ready by first practice.\n\n[02:37] Helena Marsh: And Luca generally — how's his head after another P11?\n\n[02:41] Tomás Reyes: Frustrated. He knows the strategy didn't help him. I'll talk to him directly today — I'd rather he hears it from me that the early call was ours, not his fault.\n\n[02:50] Helena Marsh: Good.\n\n[02:51] Tomás Reyes: Last thing. The communication on the pit wall during the safety car was slow. It took us about eight seconds to decide to keep Rafael out. That's too long.\n\n[02:59] Priya Nandakumar: Do we want a pre-agreed safety car decision table? Like, if we're within X laps of the window, we pit automatically.\n\n[03:05] Tomás Reyes: Yes. I'll draft one. But it won't be ready for this weekend — let's say Round twenty as well.\n\n[03:10] Helena Marsh: Open question for me: should the decision table be signed off by me, or just strategy? I'd like to see it but I don't need to approve every line.\n\n[03:17] Tomás Reyes: Let's decide that when the draft exists.\n\n[03:19] Helena Marsh: Fine.\n\n[03:20] Tomás Reyes: Risks for the weekend: rain is forecast for Saturday, so qualifying could be messy. And if the new tyre model isn't ready for twenty, we're still using the old one with the same blind spot.\n\n[03:30] Bea Santos: I'll flag it early if I'm going to miss the ninth.\n\n[03:33] Tomás Reyes: Thanks. Recap: one-stop default for nineteen, two-stop reactive only. Bea updates the tyre model with live track temperature, tested by October ninth. Priya's team works brake balance with Luca before first practice. I talk to Luca today and draft the safety car decision table for Round twenty. Approval of the table is open. Done.\n\n[03:52] [Meeting ends]\n", "03": "MEETING: Sponsor Renewal — Halcyon Energy\nDATE: Wednesday, September 30, 2026 | 3:30–3:36 PM\nCOMPANY: Apex Racing (APR)\nATTENDEES: Claire Dumont (Commercial Director), Daniel Okafor (Finance Director), Grant Whitfield (Partnership Director, Halcyon Energy — external), Helena Marsh (Team Principal, joined at 02:40)\nNOTE: Fictional meeting created as portfolio sample data. Halcyon Energy is a fictional company.\n\n---\n\n[00:00] Claire Dumont: Grant, thanks for making time. I know it's late in your day. So the purpose today is really to get aligned on the shape of a renewal before we put anything formal on paper. Your current deal ends December thirty-first.\n\n[00:14] Grant Whitfield: Yes, and I'll be honest with you, Claire, the board is supportive, but they're asking harder questions this year. Last year it was \"do we like the brand fit.\" This year it's \"what did we actually get for the money.\"\n\n[00:27] Claire Dumont: That's fair. And we want to answer that properly. Daniel, do you want to cover what we've pulled together?\n\n[00:33] Daniel Okafor: Sure. So, three things we can show. Logo exposure on broadcast — our media agency estimates about two hundred and ten minutes of on-screen time for the Halcyon logo so far this season. Social reach on the posts where you were tagged. And the hospitality — you've used eight of your ten guest passes.\n\n[00:52] Grant Whitfield: The broadcast number is good. Is it independently measured?\n\n[00:56] Daniel Okafor: It's from the agency's tracking tool. Not audited, no.\n\n[01:00] Grant Whitfield: That's the thing my board will push on. If I can show an independent figure, it's a much easier conversation.\n\n[01:06] Claire Dumont: Then let's get one. Daniel, can we commission an independent media valuation?\n\n[01:10] Daniel Okafor: We can. There's a cost — I'll get a quote. The timing is the issue. A proper report takes three to four weeks.\n\n[01:17] Grant Whitfield: My board meets November twelfth. If I have it a week before, that works.\n\n[01:22] Daniel Okafor: So by November fifth. That's doable if I commission it this week.\n\n[01:26] Claire Dumont: Let's do that. Grant, on the commercial side — what's Halcyon thinking in terms of structure?\n\n[01:32] Grant Whitfield: Two things. One, we'd like a three-year term this time, not annual. It's simpler for planning. Two, we'd like to activate the sustainability angle more. We're launching a renewable fuel product next year and we'd love the team involved.\n\n[01:47] Claire Dumont: A three-year term is great for us too. On sustainability — what does \"involved\" look like?\n\n[01:52] Grant Whitfield: Content, mainly. Drivers at a launch event, maybe a factory visit filmed for our channels.\n\n[01:58] Claire Dumont: That's all doable. I'd want to check driver availability against their contracts — there are limits on appearance days.\n\n[02:04] Daniel Okafor: And pricing would need to reflect the extra activation. A three-year deal with more content isn't the same fee.\n\n[02:10] Grant Whitfield: Understood. I expected that.\n\n[02:12] Claire Dumont: Okay. So I think the direction is: three-year term, with a sustainability activation package on top. Pricing to follow. Is that fair, Grant?\n\n[02:20] Grant Whitfield: That's fair as a direction. Nothing's signed, obviously, until the board sees it.\n\n[02:25] Claire Dumont: Of course. Oh — by the way, are you coming to the end-of-season dinner? It's at the same place as last year.\n\n[02:30] Grant Whitfield: Ha, the one with the terrible dessert? I'll be there. My wife wants to come this time too.\n\n[02:35] Claire Dumont: Great, I'll make sure there's a seat. Anyway —\n\n[02:40] Helena Marsh: Sorry I'm late, everyone. Grant, good to see you. Where are we?\n\n[02:44] Claire Dumont: Direction agreed on a three-year term with a sustainability package. Daniel's commissioning an independent media valuation for Grant's board on November twelfth.\n\n[02:52] Helena Marsh: Good. Grant, one thing from me. We're likely announcing a driver contract in the next few weeks. Would Halcyon want to be part of that announcement?\n\n[03:00] Grant Whitfield: Possibly. Depends who and when. Can you give me a heads-up before it goes public?\n\n[03:05] Helena Marsh: We can do that under confidentiality. Claire, can you coordinate?\n\n[03:09] Claire Dumont: Yes. I'll keep Grant briefed on timing once it's confirmed internally.\n\n[03:13] Grant Whitfield: Thanks. Last thing from my side — I'll need a draft term sheet before the board meeting too. Not final, just the key terms.\n\n[03:20] Claire Dumont: I'll send a draft term sheet by October twenty-third. That gives you two and a half weeks.\n\n[03:25] Grant Whitfield: Perfect.\n\n[03:26] Daniel Okafor: I'll need to price the activation package before Claire can do that. I'll get pricing to her by October sixteenth.\n\n[03:32] Claire Dumont: Thanks. Risks on our side: if the independent valuation comes back lower than the agency number, that's an awkward conversation.\n\n[03:38] Daniel Okafor: It probably will be lower. Agency numbers are usually optimistic. Better we know before Grant's board does.\n\n[03:44] Grant Whitfield: Appreciate the honesty. I'd rather have a real number.\n\n[03:47] Claire Dumont: Open question — do we bundle the driver appearances into the base fee or price them separately? I lean separately but let's decide once Daniel has numbers.\n\n[03:55] Helena Marsh: Agreed, decide later.\n\n[03:57] Claire Dumont: Okay. So: three-year term plus sustainability package as the direction. Daniel gets the valuation quote this week and the report to Grant by November fifth, and activation pricing to me by October sixteenth. I send the draft term sheet by October twenty-third and coordinate the announcement heads-up. Bundling is open. Thanks, Grant.\n\n[04:16] Grant Whitfield: Thanks, all.\n\n[04:17] [Meeting ends]\n", "04": "MEETING: Logistics Planning — Rounds 20–21 (Back-to-Back Flyaways)\nDATE: Thursday, October 1, 2026 | 9:00–9:05 AM\nCOMPANY: Apex Racing (APR)\nATTENDEES: Kenji Arata (Logistics Manager), Helena Marsh (Team Principal), Priya Nandakumar (Chief Engineer), Nadia Kowalski (Account Manager, Meridian Freight — external)\nNOTE: Fictional meeting created as portfolio sample data. Meridian Freight is a fictional company.\n\n---\n\n[00:00] Kenji Arata: Morning. Thanks, Nadia, for joining. So this is about Rounds twenty and twenty-one. They're back to back, two different continents, one week apart. Everything that goes to Round twenty has to go straight on to twenty-one. Nothing comes back to the factory in between.\n\n[00:17] Nadia Kowalski: And the sea freight's already gone, right?\n\n[00:19] Kenji Arata: Yes, the sea kits left in August. Today is about the air freight. Nadia, remind everyone of the dates.\n\n[00:25] Nadia Kowalski: Sure. Air freight cut-off for Round twenty is October eighth. Anything not at our hub by end of day on the eighth doesn't fly with the main shipment. After that it's individual courier, which is very expensive.\n\n[00:38] Helena Marsh: How expensive?\n\n[00:39] Nadia Kowalski: For a front wing? Roughly four to five times the per-kilo rate.\n\n[00:43] Helena Marsh: Okay, so we really don't want to miss the eighth.\n\n[00:46] Kenji Arata: That's why I wanted Priya here. Priya, the new floor — is it going to make the cut-off?\n\n[00:51] Priya Nandakumar: That's the problem. The first floor will be ready. The spare won't. Composites are saying October tenth for the spare.\n\n[00:59] Kenji Arata: So two days late.\n\n[01:01] Priya Nandakumar: Two days late. And we don't race the new floor without a spare. If we damage the only one in practice, we're stuck.\n\n[01:08] Helena Marsh: Options?\n\n[01:10] Kenji Arata: Option one, we fly both floors by courier when the spare is ready. Option two, the first floor goes with the main freight, and the spare goes by courier. Option three, we don't run the new floor until Round twenty-one.\n\n[01:23] Priya Nandakumar: Option three costs us performance for a whole weekend. I'd really rather not.\n\n[01:28] Nadia Kowalski: Option two is the cheapest of the first two. You only courier one part.\n\n[01:32] Helena Marsh: Then option two. First floor in the main shipment, spare by courier as soon as it's ready.\n\n[01:37] Priya Nandakumar: Agreed.\n\n[01:38] Kenji Arata: Agreed. Nadia, can you book a courier slot for around the tenth or eleventh?\n\n[01:42] Nadia Kowalski: I'll provisionally hold one for the eleventh. Kenji, I'll need the final dimensions and weight before I can confirm.\n\n[01:48] Kenji Arata: Priya, can your team get me those?\n\n[01:51] Priya Nandakumar: I'll get you dimensions and weight by Monday.\n\n[01:54] Kenji Arata: Thanks. Next — the hospitality kit. We're short two crates from last round. One came back damaged.\n\n[02:00] Helena Marsh: Can we replace it in time?\n\n[02:02] Kenji Arata: Yes, if I order this week. I'll order replacement crates today, and they need to be packed before the freight cut-off.\n\n[02:09] Helena Marsh: Good.\n\n[02:10] Nadia Kowalski: One thing I should flag. Round twenty-one's country changed its import rules in September. Temporary import documents now need to be filed earlier — at least five working days before arrival.\n\n[02:21] Kenji Arata: Hm. That's new to me. So someone needs to check the customs paperwork for twenty-one and make sure we're compliant.\n\n[02:28] Helena Marsh: Yes, definitely.\n\n[02:29] Priya Nandakumar: Not my area, I'm afraid.\n\n[02:31] Kenji Arata: Okay, let's come back to that. Next — personnel. We've got thirty-eight people travelling. Hotels are booked for both rounds. Visas: two engineers still waiting on Round twenty-one visas.\n\n[02:43] Helena Marsh: Is that a risk?\n\n[02:45] Kenji Arata: Moderate. If they don't come through, we'd need to swap people. I'll chase the visa agency and have an answer by October sixth. If not, we plan a swap.\n\n[02:54] Helena Marsh: Who would replace them?\n\n[02:56] Priya Nandakumar: I'd need to think about that. I'd rather not decide now.\n\n[02:59] Helena Marsh: Fine, keep it open.\n\n[03:01] Kenji Arata: Last item. Between the two rounds the team has three days off. Some people have asked to fly home. That's twelve extra flights.\n\n[03:08] Helena Marsh: What did we do last year?\n\n[03:10] Kenji Arata: We kept everyone on site. People were tired.\n\n[03:13] Helena Marsh: Then let's allow it this time. Wellbeing matters, and three days is enough to go home if it's a short flight. But only for people whose home trip is under, say, eight hours each way.\n\n[03:24] Kenji Arata: Okay. I'll send the rule to the team and collect requests by October fifth.\n\n[03:28] Helena Marsh: Good.\n\n[03:29] Nadia Kowalski: Risks from my side: weather at the transit hub. There's typhoon season there in October. If the hub closes, everything slips by a day or two.\n\n[03:38] Kenji Arata: Noted. Do we have a backup routing?\n\n[03:40] Nadia Kowalski: There's one, but it adds a day. I'll send the option over so you have it.\n\n[03:44] Kenji Arata: Thanks. Recap: new floor in the main shipment, spare by courier — Nadia holds a slot for the eleventh, Priya gets me dimensions and weight by Monday. I order replacement hospitality crates today, packed before the cut-off. Visas — I chase and have an answer by the sixth. Fly-home rule goes out and requests are due on the fifth. Nadia sends the backup routing. Who replaces the engineers if visas fail is still open. Anything else?\n\n[04:08] Helena Marsh: No. Thanks, everyone.\n\n[04:09] [Meeting ends]\n", "05": "MEETING: Upgrade Budget Review — Cost Cap\nDATE: Friday, October 2, 2026 | 1:00–1:06 PM\nCOMPANY: Apex Racing (APR), Apex Powertrain (APW)\nATTENDEES: Daniel Okafor (Finance Director), Priya Nandakumar (Chief Engineer), Stefan Vogel (Powertrain Programme Lead, APW), Helena Marsh (Team Principal)\nNOTE: Fictional meeting created as portfolio sample data.\n\n---\n\n[00:00] Daniel Okafor: Okay, let's start. Quick context: we have five rounds left and about two point four million left under the cost cap for the year. Engineering has asked for three point one million in upgrades. So we're seven hundred thousand over, and we need to choose.\n\n[00:18] Helena Marsh: And going over the cap isn't an option.\n\n[00:20] Daniel Okafor: No. A breach means a fine and possibly a points penalty. Not worth it.\n\n[00:25] Priya Nandakumar: Understood. So, the three requests. One: the new rear wing package, one point two million. Two: the floor update, which is already in production, nine hundred thousand. Three: the cooling upgrade for the hot races next year, one million.\n\n[00:42] Helena Marsh: The floor's already being made, so that's committed?\n\n[00:45] Daniel Okafor: Mostly. Six hundred thousand is already spent. The remaining three hundred is the spares.\n\n[00:50] Priya Nandakumar: And we need those spares. We're flying one by courier for Round twenty as it is.\n\n[00:55] Helena Marsh: So the floor stays. That leaves one point five million for the rear wing and cooling, and together they're two point two.\n\n[01:03] Stefan Vogel: Can I add something on cooling? Part of that million is integration work with the powertrain. If we push cooling to next year's budget, it actually fits better with our new hybrid unit timeline. We'd have to redo some of the work anyway when the new unit arrives.\n\n[01:18] Priya Nandakumar: That's true. Doing cooling now means doing it twice.\n\n[01:21] Daniel Okafor: And next year's cap resets in January. Cooling would come out of a fresh budget.\n\n[01:26] Helena Marsh: So the logical call is: floor stays, rear wing goes ahead this year, cooling moves to next year's budget.\n\n[01:32] Priya Nandakumar: The rear wing's one point two, so that leaves three hundred thousand of headroom. Comfortable.\n\n[01:38] Daniel Okafor: I'd like to keep at least two hundred of that as contingency for crash damage. Five rounds is a lot of opportunities to break things.\n\n[01:45] Helena Marsh: Agreed. So decision: floor including spares, rear wing package this year. Cooling deferred to next year's budget. Two hundred thousand held as crash contingency.\n\n[01:55] Priya Nandakumar: Agreed.\n\n[01:56] Stefan Vogel: Agreed from Powertrain.\n\n[01:57] Daniel Okafor: Agreed.\n\n[01:58] Helena Marsh: Priya, timing on the rear wing?\n\n[02:01] Priya Nandakumar: If we release the order today, it's ready for Round twenty-two. I'll release the production order this afternoon.\n\n[02:07] Daniel Okafor: I'll update the cost cap forecast with these decisions and circulate it by Wednesday the seventh.\n\n[02:12] Stefan Vogel: And I'll write up the cooling integration scope for next year so it's ready for the January budget round. End of October is fine for that.\n\n[02:19] Helena Marsh: Good. Now, wind tunnel time. Priya, you wanted to raise it?\n\n[02:23] Priya Nandakumar: Yes. We're allowed a certain number of wind tunnel hours based on championship position. If we finish higher, we get fewer hours next year. There's a question of whether we focus the remaining hours on this car or next year's.\n\n[02:36] Helena Marsh: That's a big strategic question. I don't think we can settle it in ten minutes.\n\n[02:41] Daniel Okafor: Agreed. Let's park it.\n\n[02:43] Helena Marsh: Let's park it for the technical strategy meeting on the fourteenth. Priya, bring the options.\n\n[02:48] Priya Nandakumar: Will do.\n\n[02:50] Helena Marsh: Risks?\n\n[02:51] Daniel Okafor: The big one is crash damage. Two hundred thousand covers one moderate incident. A big crash and we're in trouble.\n\n[02:59] Priya Nandakumar: And if the rear wing doesn't deliver what the simulation says, we've spent one point two million on nothing. It's a decent correlation history, but not perfect.\n\n[03:08] Stefan Vogel: From Powertrain: if cooling slips past January in next year's process, it affects the hybrid timeline. We need the scope agreed early.\n\n[03:16] Helena Marsh: Noted. Daniel, can the forecast show a crash scenario?\n\n[03:19] Daniel Okafor: Yes, I'll add a one-big-crash scenario to the forecast.\n\n[03:23] Helena Marsh: Good. Open question: if we do have a big crash, what gets cut first? I'd like that decided before it happens, not during a race weekend.\n\n[03:31] Priya Nandakumar: Let me think about a priority order and bring it to the fourteenth as well.\n\n[03:35] Helena Marsh: Fine. Recap: floor with spares and rear wing go ahead this year, cooling moves to next year, two hundred thousand contingency. Priya releases the rear wing order today. Daniel circulates the updated forecast with a crash scenario by the seventh. Stefan writes the cooling scope by end of October. Wind tunnel allocation and the crash priority order go to the fourteenth. Thanks, all.\n\n[03:58] [Meeting ends]\n"};
+const TODAY = "2026-10-03"; // demo "as of" date
+const STATUSES = ["Not started","In progress","Blocked","Done"];
+
+const MEETINGS = [
+{ id:"m1", file:"01", title:"Driver Contract Renewal — Car 7", date:"2026-09-28", time:"2:00–2:05 PM", type:"Contract Review",
+  companies:["APR","APA"], depts:["Driver Management","Legal","Finance"],
+  people:["Helena Marsh","Marco Bellandi","Sofia Lindqvist","Daniel Okafor"],
+  tldr:"Offer Rafael Ortega one guaranteed year plus a performance-triggered option year, but only if he accepts the clause. The draft must land by Oct 6 to stay ahead of his Oct 15 deadline.",
+  summary:"Rafael Ortega wants to stay but asked for two years. The team agreed a 1+1 structure that gives him a two-year headline while protecting the option to promote Academy driver Mia Torres. The option year triggers on a championship points threshold, which Finance and Legal preferred over a teammate comparison.",
+  decisions:[
+    {t:"Offer one guaranteed year plus an option year, triggered by a points threshold.", cond:"Conditional: if he refuses a performance clause, fall back to a straight one-year offer."},
+    {t:"Brief Mia Torres before the announcement, without promising a 2028 seat."}
+  ],
+  deliverables:[
+    {id:"d1", task:"Model low, mid and high points scenarios with the bonus structure", owner:"Daniel Okafor", due:"2026-10-02", status:"Done"},
+    {id:"d2", task:"Draft the option clause and trigger wording", owner:"Sofia Lindqvist", due:"2026-10-06", status:"In progress"},
+    {id:"d3", task:"Sound out Rafael's manager informally on the structure (no numbers)", owner:"Marco Bellandi", due:"2026-10-02", status:"Done"},
+    {id:"d4", task:"Brief Mia Torres before the contract announcement", owner:"Marco Bellandi", due:null, dueNote:"Announcement week, date TBC", status:"Not started"},
+    {id:"d5", task:"Ask Claire Dumont whether to announce with the sponsor renewal", owner:"Marco Bellandi", due:null, status:"Not started"},
+    {id:"d6", task:"Review Mia's Academy contract renewal clause", owner:"Sofia Lindqvist", due:null, dueNote:"After the season, no firm date", status:"Not started"}
+  ],
+  open:["Announce together with the Halcyon renewal, or separately?","Does the bonus structure still fit the budget in a high-scoring year?"],
+  risks:["A rival offer could force his decision before Oct 15, so the Oct 6 draft cannot slip.","Performance drop with age; the option year is the mitigation."]
+},
+{ id:"m2", project:"202608-APR-TYM", file:"02", title:"Post-Race Strategy Debrief — Round 18", date:"2026-09-29", time:"10:00–10:06 AM", type:"Retrospective",
+  companies:["APR"], depts:["Race Operations","Engineering"],
+  people:["Tomás Reyes","Priya Nandakumar","Bea Santos","Helena Marsh"],
+  tldr:"An early stop plus a safety car cost Luca Henning points. The tyre model was five laps too pessimistic because it ignores live track temperature. One-stop is now the Round 19 default.",
+  summary:"Rafael finished P7 and Luca P11. Luca stopped on lap 22, three laps before a safety car let rivals take cheap stops. The tyre model assumed start-of-race track temperature, which fell about six degrees under cloud. The team first chose a two-stop plan for Round 19, then reversed it after confirming pit-lane loss is now about 24 seconds.",
+  decisions:[
+    {t:"Round 19 default is a one-stop (medium to hard). Two-stop is used only if an early safety car appears.", cond:"Replaces the two-stop plan agreed earlier in the same meeting."},
+    {t:"Feed live track temperature into the tyre model from Round 20."},
+    {t:"Build a pre-agreed safety car decision table for the pit wall."}
+  ],
+  deliverables:[
+    {id:"d7", task:"Add live track temperature to the tyre model and test it", owner:"Bea Santos", due:"2026-10-09", status:"In progress"},
+    {id:"d8", task:"Review brake balance data with Luca; setup change ready for first practice", owner:"Priya Nandakumar", due:"2026-10-01", status:"Done"},
+    {id:"d9", task:"Talk to Luca about the early strategy call", owner:"Tomás Reyes", due:"2026-09-29", status:"Done"},
+    {id:"d10", task:"Draft the safety car decision table", owner:"Tomás Reyes", due:null, dueNote:"Before Round 20", status:"Not started"},
+    {id:"d11", task:"Brief the pit wall on the final one-stop plan", owner:"Tomás Reyes", due:"2026-10-01", status:"Done"}
+  ],
+  open:["Who signs off the safety car decision table: the Team Principal or Strategy alone?"],
+  risks:["Rain forecast for Saturday could disrupt qualifying.","If the tyre model misses Oct 9, Round 20 runs with the same blind spot."]
+},
+{ id:"m3", project:"202609-APR-SRR", file:"03", title:"Sponsor Renewal — Halcyon Energy", date:"2026-09-30", time:"3:30–3:36 PM", type:"Partner Meeting",
+  companies:["APR"], depts:["Commercial","Finance"],
+  people:["Claire Dumont","Daniel Okafor","Grant Whitfield","Helena Marsh"],
+  tldr:"Halcyon is open to a three-year renewal with a sustainability package, but its board wants independently measured value before it meets on Nov 12.",
+  summary:"Halcyon's current deal ends Dec 31. Its board now asks what the sponsorship returned, and the agency's estimate of 210 broadcast minutes is not audited. Both sides favour a three-year term with content around Halcyon's renewable fuel launch, priced above the current fee. Nothing is binding until the Halcyon board reviews it.",
+  decisions:[
+    {t:"Direction: three-year term plus a sustainability activation package; pricing to follow.", cond:"Non-binding until Halcyon's board approves on Nov 12."},
+    {t:"Give Halcyon a confidential heads-up before the driver contract is announced."}
+  ],
+  deliverables:[
+    {id:"d12", task:"Get a quote for an independent media valuation", owner:"Daniel Okafor", due:"2026-10-02", status:"In progress", remark:"Two agencies contacted; one quote still pending."},
+    {id:"d13", task:"Deliver the independent valuation report to Halcyon", owner:"Daniel Okafor", due:"2026-11-05", status:"Not started"},
+    {id:"d14", task:"Price the sustainability activation package", owner:"Daniel Okafor", due:"2026-10-16", status:"Not started"},
+    {id:"d15", task:"Send Halcyon a draft term sheet with the key terms", owner:"Claire Dumont", due:"2026-10-23", status:"Not started"},
+    {id:"d16", task:"Check driver appearance-day limits against contracts", owner:"Claire Dumont", due:null, status:"Not started"},
+    {id:"d17", task:"Coordinate the confidential announcement heads-up with Halcyon", owner:"Claire Dumont", due:null, dueNote:"Once timing is confirmed internally", status:"Not started"}
+  ],
+  open:["Bundle driver appearances into the base fee, or price them separately?"],
+  risks:["The independent valuation will likely come in below the agency figure."]
+},
+{ id:"m4", project:"202609-APR-FRT", file:"04", title:"Logistics Planning — Rounds 20–21", date:"2026-10-01", time:"9:00–9:05 AM", type:"Operations Planning",
+  companies:["APR"], depts:["Logistics","Race Operations"],
+  people:["Kenji Arata","Helena Marsh","Priya Nandakumar","Nadia Kowalski"],
+  tldr:"The new floor flies with the main freight by Oct 8; its spare follows by courier around Oct 11. Round 21 customs paperwork still has no owner.",
+  summary:"Rounds 20 and 21 run back to back on two continents. Air freight cut-off is end of day Oct 8, after which courier rates run four to five times higher. The spare floor will be two days late. Round 21's host country now requires import documents at least five working days before arrival.",
+  decisions:[
+    {t:"Ship the first new floor with the main freight; send the spare by courier when ready."},
+    {t:"Allow staff to fly home between rounds if the trip is under eight hours each way."}
+  ],
+  deliverables:[
+    {id:"d18", task:"Hold and confirm a courier slot for the spare floor", owner:"Nadia Kowalski", due:"2026-10-11", status:"In progress"},
+    {id:"d19", task:"Send spare floor dimensions and weight to Logistics", owner:"Priya Nandakumar", due:"2026-10-05", status:"Not started"},
+    {id:"d20", task:"Order replacement hospitality crates", owner:"Kenji Arata", due:"2026-10-01", status:"Done"},
+    {id:"d21", task:"Pack replacement crates before the freight cut-off", owner:"Kenji Arata", due:"2026-10-08", status:"Not started"},
+    {id:"d22", task:"Check Round 21 customs paperwork against the new import rules", owner:null, due:null, dueNote:"At least 5 working days before arrival", status:"Not started", remark:"No owner agreed in the meeting. Assign at next ops sync."},
+    {id:"d23", task:"Chase the visa agency for two engineers' Round 21 visas", owner:"Kenji Arata", due:"2026-10-06", status:"In progress"},
+    {id:"d24", task:"Send the fly-home rule and collect requests", owner:"Kenji Arata", due:"2026-10-05", status:"In progress"},
+    {id:"d25", task:"Send the backup freight routing option", owner:"Nadia Kowalski", due:null, status:"Not started"}
+  ],
+  open:["Who owns the Round 21 customs paperwork?","Who replaces the two engineers if their visas fail?"],
+  comments:[{who:"Helena Marsh",at:"Oct 1, 16:20",text:"Kenji, please take the customs item until we find a better owner."}],
+  risks:["Typhoon season could close the transit hub and delay freight by one to two days.","Missing the Oct 8 cut-off moves parts to courier at four to five times the rate."]
+},
+{ id:"m5", project:"202607-APR-CCF", file:"05", title:"Upgrade Budget Review — Cost Cap", date:"2026-10-02", time:"1:00–1:06 PM", type:"Budget Review",
+  companies:["APR","APW"], depts:["Finance","Engineering"],
+  people:["Daniel Okafor","Priya Nandakumar","Stefan Vogel","Helena Marsh"],
+  tldr:"To stay under the cost cap, the floor and rear wing go ahead, cooling moves to next year's budget, and 200K is held for crash damage.",
+  summary:"Engineering requested 3.1M of upgrades against 2.4M of remaining cap. The floor is mostly spent already, and deferring cooling avoids doing the powertrain integration twice when the new hybrid unit arrives. That leaves 300K of headroom, of which 200K is reserved for crashes.",
+  decisions:[
+    {t:"Proceed with the floor (including spares) and the rear wing package this year."},
+    {t:"Defer the cooling upgrade to next year's cost cap."},
+    {t:"Hold 200K as crash-damage contingency."}
+  ],
+  deliverables:[
+    {id:"d26", task:"Release the rear wing production order", owner:"Priya Nandakumar", due:"2026-10-02", status:"Done"},
+    {id:"d27", task:"Circulate the updated cost cap forecast with a big-crash scenario", owner:"Daniel Okafor", due:"2026-10-07", status:"In progress"},
+    {id:"d28", task:"Write the cooling integration scope for next year", owner:"Stefan Vogel", due:"2026-10-31", status:"Not started"},
+    {id:"d29", task:"Bring wind tunnel allocation options to the technical strategy meeting", owner:"Priya Nandakumar", due:"2026-10-14", status:"Not started"},
+    {id:"d30", task:"Propose what gets cut first after a big crash", owner:"Priya Nandakumar", due:"2026-10-14", status:"Not started"}
+  ],
+  open:["Parked to Oct 14: focus remaining wind tunnel hours on this car or next year's?","What gets cut first if a big crash exceeds the contingency?"],
+  comments:[{who:"Daniel Okafor",at:"Oct 2, 15:05",text:"Forecast draft is in the shared folder. Crash scenario still to add."}],
+  risks:["A big crash would exceed the 200K contingency.","The rear wing may not match simulation, wasting 1.2M.","If the cooling scope slips past January, the hybrid timeline suffers."]
+}
+];
+
+const COMPANIES = {APR:"Apex Racing",APW:"Apex Powertrain",APA:"Apex Academy"};
+const TAG_FIELDS=["type","companies","depts","people"];
+const BASE=Object.fromEntries(MEETINGS.map(m=>[m.id,JSON.parse(JSON.stringify(Object.fromEntries(TAG_FIELDS.map(f=>[f,m[f]]))))]));
+function applyTags(){MEETINGS.forEach(m=>Object.assign(m,JSON.parse(JSON.stringify(BASE[m.id])),(S.tags||{})[m.id]||{}));}
+
+/* ---------- state ---------- */
+const KEY="apex-briefs-v1";
+const DEFAULT_TEAM=["Helena Marsh","Tomás Reyes","Bea Santos","Kenji Arata"];
+const ROLES={"Helena Marsh":"Team Principal","Tomás Reyes":"Head of Race Strategy","Priya Nandakumar":"Chief Engineer","Bea Santos":"Performance Analyst","Daniel Okafor":"Finance Director","Sofia Lindqvist":"Head of Legal","Marco Bellandi":"Driver Manager","Claire Dumont":"Commercial Director","Kenji Arata":"Logistics Manager","Stefan Vogel":"Powertrain Programme Lead","Grant Whitfield":"Halcyon Energy (sponsor)","Nadia Kowalski":"Meridian Freight (supplier)"};
+let S={status:{},remarks:{},comments:{},openGroups:{},owner:{},team:null,extra:[],tags:{}};
+try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+S.tags=S.tags||{}; applyTags();
+const allD=()=>MEETINGS.flatMap(m=>m.deliverables.map(d=>({...d,m})));
+const st=d=>S.status[d.id]||d.status;
+const ownerOf=d=>(d.id in S.owner)?S.owner[d.id]:d.owner;
+const team=()=>S.team||DEFAULT_TEAM;
+const inTeam=n=>!!n&&team().includes(n);
+const allPeople=()=>uniq([...MEETINGS.flatMap(m=>m.people),...MEETINGS.flatMap(m=>m.deliverables.map(d=>d.owner).filter(Boolean)),...(S.extra||[]),...team()]);
+const rem=d=>S.remarks[d.id]??d.remark??"";
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const fd=iso=>{const [y,m,d]=iso.split("-").map(Number);return `${MON[m-1]} ${d}`};
+const fdl=iso=>{const [y,m,d]=iso.split("-").map(Number);const dt=new Date(Date.UTC(y,m-1,d));return `${DOW[dt.getUTCDay()]}, ${MON[m-1]} ${d}, ${y}`};
+const initials=n=>n?n.split(" ").map(p=>p[0]).slice(0,2).join(""):"?";
+const daysBetween=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+function dueFlag(d){
+  if(st(d)==="Done") return null;
+  if(!d.due) return {cls:"warn",t:"Needs date"};
+  const n=daysBetween(TODAY,d.due);
+  if(n<0) return {cls:"bad",t:`Overdue ${-n}d`};
+  if(n<=3) return {cls:"warn",t:n===0?"Due today":`Due in ${n}d`};
+  return null;
+}
+const opts=(el,label,vals)=>{el.innerHTML=`<option value="">${label}</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")};
+const uniq=a=>[...new Set(a)].sort((x,y)=>x.localeCompare(y));
+
+function statusSelect(d){
+  const s=st(d);
+  return `<select class="status" data-id="${d.id}" data-s="${s}" aria-label="Status">${STATUSES.map(o=>`<option${o===s?" selected":""}>${o}</option>`).join("")}</select>`;
+}
+function ownerCell(d){
+  const o=ownerOf(d), tm=team(), others=allPeople().filter(p=>!tm.includes(p));
+  const op=p=>`<option value="${esc(p)}"${p===o?" selected":""}>${esc(p)}</option>`;
+  const moved=(d.id in S.owner)&&S.owner[d.id]!==d.owner;
+  return `<span class="ownsel"><select class="owner-select${o?"":" none"}" data-id="${d.id}" aria-label="Owner">
+    <option value=""${o?"":" selected"}>Unassigned</option>
+    <optgroup label="Our team">${tm.map(op).join("")}</optgroup>
+    <optgroup label="Others">${others.map(op).join("")}</optgroup></select>
+    ${o?(inTeam(o)?`<span class="chip team">Our team</span>`:`<span class="chip ext">Other team</span>`):`<span class="chip bad">Unassigned</span>`}
+    ${moved?`<span class="asof" title="Owner in the meeting">Was: ${esc(d.owner||"Unassigned")}</span>`:""}</span>`;
+}
+function dueCell(d){
+  const f=dueFlag(d);
+  return `<span class="due">${d.due?fd(d.due):`<span class="vague">${esc(d.dueNote||"Not specified")}</span>`}${f?`<span class="chip ${f.cls}">${f.t}</span>`:""}</span>`;
+}
+function remarkCell(d){return `<textarea class="remark" data-id="${d.id}" rows="1" placeholder="Add remark" aria-label="Remark">${esc(rem(d))}</textarea>`}
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const D=allD(), open=D.filter(d=>st(d)!=="Done");
+  const overdue=open.filter(d=>d.due&&d.due<TODAY).length;
+  const complete=D.filter(d=>ownerOf(d)&&d.due).length;
+  const teamOpen=open.filter(d=>inTeam(ownerOf(d))).length;
+  const done=D.length-open.length;
+  $("#kpis").innerHTML=[
+    [MEETINGS.length,"Meetings summarized"],
+    [D.length,"Deliverables captured"],
+    [Math.round(done/D.length*100)+"%","Closed"],
+    [teamOpen,"Open for our team"],
+    [overdue,"Overdue",overdue>0],
+    [Math.round(complete/D.length*100)+"%","Have owner and date"],
+  ].map(([v,l,a])=>`<div class="kpi${a?" alert":""}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("")+
+  `<div class="kpi"><div class="v" style="font-size:18px;padding-top:6px">${fd(TODAY)}, 2026</div><div class="l">Data as of</div></div>`;
+  $("#open-count").textContent=open.length;
+}
+
+/* ---------- meetings view ---------- */
+let current=MEETINGS[MEETINGS.length-1].id;
+function filteredMeetings(){
+  const q=$("#m-search").value.trim().toLowerCase(), t=$("#f-type").value, c=$("#f-co").value, dp=$("#f-dept").value, p=$("#f-person").value;
+  return [...MEETINGS].sort((a,b)=>b.date.localeCompare(a.date)).filter(m=>
+    (!t||m.type===t)&&(!c||m.companies.includes(c))&&(!dp||m.depts.includes(dp))&&(!p||m.people.includes(p))&&
+    (!q||(m.title+" "+m.tldr+" "+m.summary).toLowerCase().includes(q)));
+}
+function renderList(){
+  const list=filteredMeetings();
+  $("#mlist").innerHTML=list.length?list.map(m=>{
+    const open=m.deliverables.filter(d=>st(d)!=="Done").length;
+    return `<li><button data-m="${m.id}" aria-current="${m.id===current}">
+      <span class="mt">${esc(m.title)}</span>
+      <span class="mm"><span>${fd(m.date)}</span><span class="chip type">${m.type}</span>${m.companies.map(c=>`<span class="chip co">${c}</span>`).join("")}<span>${open} open</span></span>
+    </button></li>`}).join(""):`<li class="empty">No meetings match these filters.</li>`;
+}
+function renderBrief(){
+  const m=MEETINGS.find(x=>x.id===current);
+  const comments=S.comments[m.id]??(m.comments||[]);
+  const tx=(TRANSCRIPTS[m.file]||"").split("\n").map(l=>{
+    const r=l.match(/^\[(\d\d:\d\d)\]\s*([^:]+?):\s*(.*)$/); if(r) return `<div class="txl"><time>${r[1]}</time><div><b>${esc(r[2])}:</b> ${esc(r[3])}</div></div>`;
+    const e=l.match(/^\[(\d\d:\d\d)\]\s*(\[.*\])$/); if(e) return `<div class="txl"><time>${e[1]}</time><div><i>${esc(e[2])}</i></div></div>`;
+    return "";}).join("");
+  $("#brief").innerHTML=`
+    <div class="eyebrow">Meeting brief</div>
+    <h1 class="title">${esc(m.title)}</h1>
+    <div class="meta"><span class="when">${fdl(m.date)} · ${m.time}</span><span class="chip type">${esc(m.type)}</span></div>
+    ${tagBlock(m)}
+    ${m.project?`<p class="meta" style="margin-top:8px">Linked project <button class="linkbtn pid" data-open-proj="${esc(m.project)}">${esc(m.project)}</button></p>`:""}
+    <div class="tldr"><span class="eyebrow">TL;DR</span><p>${esc(m.tldr)}</p></div>
+    <h2 class="sec">Summary</h2><p class="prose">${esc(m.summary)}</p>
+    <h2 class="sec">Decisions</h2>
+    <ul class="pts">${m.decisions.map(d=>`<li>${esc(d.t)}${d.cond?`<br><span class="cond">${esc(d.cond)}</span>`:""}</li>`).join("")}</ul>
+    <h2 class="sec">Deliverables <small>${m.deliverables.filter(d=>st(d)==="Done").length} of ${m.deliverables.length} done</small></h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Deliverable</th><th>Owner</th><th>Due</th><th>Status</th><th>Remarks</th></tr></thead>
+      <tbody>${m.deliverables.map(d=>`<tr class="${st(d)==="Done"?"done":""}"><td class="task"><span class="tasktext">${esc(d.task)}</span></td><td>${ownerCell(d)}</td><td>${dueCell(d)}</td><td>${statusSelect(d)}</td><td>${remarkCell(d)}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <div class="cols">
+      <div><h2 class="sec">Open items</h2><ul class="pts">${m.open.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div><h2 class="sec">Risks</h2><ul class="pts">${m.risks.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+    </div>
+    <h2 class="sec">Comments <small>${comments.length}</small></h2>
+    <div class="comments">
+      ${comments.length?comments.map((c,i)=>`<div class="cmt"><span class="av">${initials(c.who)}</span><div class="body"><div class="who">${esc(c.who)}<time>${esc(c.at)}</time><button class="del" data-del="${i}">Delete</button></div><p>${esc(c.text)}</p></div></div>`).join(""):`<p class="empty" style="padding:0">No comments yet. Add context, follow-ups or corrections for this meeting.</p>`}
+      <form class="newc" id="newc">
+        <input class="inp" id="c-who" placeholder="Your name" value="${esc(S.lastName||"")}" aria-label="Your name">
+        <textarea class="inp" id="c-text" rows="2" placeholder="Write a comment" aria-label="Comment" required></textarea>
+        <button class="btn" type="submit">Post</button>
+      </form>
+    </div>
+    <details class="tx"><summary>Transcript</summary><div class="txlines">${tx||'<p class="empty">Transcript unavailable.</p>'}</div></details>`;
+}
+
+/* ---------- tag editing ---------- */
+let editingTags=false;
+const coLabel=c=>COMPANIES[c]?`${c} · ${COMPANIES[c]}`:c;
+function tagOptions(field){
+  if(field==="companies") return uniq([...Object.keys(COMPANIES),...MEETINGS.flatMap(m=>m.companies)]);
+  if(field==="depts") return uniq(MEETINGS.flatMap(m=>m.depts));
+  if(field==="people") return allPeople();
+  return uniq(MEETINGS.map(m=>m.type));
+}
+function tagBlock(m){
+  const edited=!!(S.tags||{})[m.id];
+  const row=(label,field,cls,fmt)=>{
+    const vals=field==="type"?[m.type]:m[field];
+    const chips=vals.map(v=>`<span class="chip ${cls}">${esc(fmt?fmt(v):v)}${editingTags&&field!=="type"?`<button class="x" data-tag-remove="${field}" data-val="${esc(v)}" aria-label="Remove ${esc(v)}">×</button>`:""}</span>`).join("");
+    const add=editingTags?`<span class="tagadd"><input list="dl-${field}" data-tag-input="${field}" placeholder="${field==="type"?"Change type":"Add "+label.toLowerCase()}" aria-label="${field==="type"?"Change type":"Add "+label.toLowerCase()}"><button data-tag-add="${field}">${field==="type"?"Set":"Add"}</button></span>
+      <datalist id="dl-${field}">${tagOptions(field).filter(o=>!vals.includes(o)).map(o=>`<option value="${esc(o)}"></option>`).join("")}</datalist>`:"";
+    return `<dt>${label}</dt><dd>${chips}${add}</dd>`;
+  };
+  return `<div class="taghead"><span class="eyebrow">Tags</span>
+      <button class="btn ghost" id="edit-tags" aria-pressed="${editingTags}">${editingTags?"Done editing":"Edit tags"}</button>
+      ${edited?`<span class="edited">Edited</span><button class="linkbtn" id="revert-tags">Revert to original</button>`:""}</div>
+    <dl class="tags${editingTags?" editing":""}">
+      ${row("Type","type","type")}
+      ${row("Company","companies","co",coLabel)}
+      ${row("Department","depts","")}
+      ${row("People","people","")}
+    </dl>${editingTags?`<p class="hint">Pick from the suggestions to keep tags consistent. New values are added to the filters automatically.</p>`:""}`;
+}
+function setTag(field,fn){
+  const m=MEETINGS.find(x=>x.id===current);
+  const cur=Object.fromEntries(TAG_FIELDS.map(f=>[f,JSON.parse(JSON.stringify(m[f]))]));
+  fn(cur);
+  S.tags[m.id]=JSON.stringify(cur)===JSON.stringify(BASE[m.id])?undefined:cur;
+  if(!S.tags[m.id]) delete S.tags[m.id];
+  save(); applyTags(); refreshFilters(); renderAll();
+}
+function addTag(field,raw){
+  const v=raw.trim().replace(/\s+/g," "); if(!v) return;
+  // match existing value case-insensitively so "finance" reuses "Finance"
+  const match=tagOptions(field).find(o=>o.toLowerCase()===v.toLowerCase())||(field==="companies"?v.toUpperCase():v);
+  setTag(field,cur=>{
+    if(field==="type") cur.type=match;
+    else if(!cur[field].includes(match)) cur[field].push(match);
+    if(field==="people"&&!allPeople().includes(match)) S.extra=[...(S.extra||[]),match];
+  });
+  setTimeout(()=>{const i=document.querySelector(`[data-tag-input="${field}"]`); if(i) i.focus();},0);
+}
+function refreshFilters(){
+  const keep=(sel,label,vals)=>{const el=$(sel),v=el.value;opts(el,label,vals);el.value=vals.includes(v)?v:"";};
+  const types=tagOptions("type"), cos=tagOptions("companies");
+  keep("#f-type","All types",types); keep("#d-type","All types",types); keep("#t-type","All types",types);
+  keep("#f-co","All companies",cos); keep("#d-co","All companies",cos); keep("#t-co","All companies",cos);
+  keep("#f-dept","All departments",tagOptions("depts")); keep("#f-person","All people",uniq(MEETINGS.flatMap(m=>m.people)));
+}
+
+/* ---------- deliverables view ---------- */
+let groupBy="meeting";
+function filteredD(){
+  const q=$("#d-search").value.trim().toLowerCase(), s=$("#d-status").value, o=$("#d-owner").value, t=$("#d-type").value, c=$("#d-co").value, hide=$("#d-hide-done").checked;
+  return allD().filter(d=>(!s||st(d)===s)&&(!o||(ownerOf(d)||"Unassigned")===o)&&(!$("#d-team-only").checked||inTeam(ownerOf(d)))&&(!t||d.m.type===t)&&(!c||d.m.companies.includes(c))&&(!hide||st(d)!=="Done")&&
+    (!q||(d.task+" "+rem(d)+" "+(ownerOf(d)||"")+" "+d.m.title).toLowerCase().includes(q)));
+}
+function renderGroups(){
+  const D=filteredD(); let groups=[];
+  if(groupBy==="meeting"){
+    [...MEETINGS].sort((a,b)=>b.date.localeCompare(a.date)).forEach(m=>{const items=D.filter(d=>d.m.id===m.id); if(items.length) groups.push({key:"m:"+m.id,title:m.title,sub:fdl(m.date),items,type:m.type});});
+  }else if(groupBy==="owner"){
+    uniq(D.map(d=>ownerOf(d)||"Unassigned")).sort((a,b)=>(inTeam(b)-inTeam(a))||a.localeCompare(b)).forEach(o=>groups.push({key:"o:"+o,title:o+(inTeam(o)?" · Our team":""),items:D.filter(d=>(ownerOf(d)||"Unassigned")===o).sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"))}));
+  }else{
+    STATUSES.forEach(s=>{const items=D.filter(d=>st(d)===s); if(items.length) groups.push({key:"s:"+s,title:s,items:items.sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"))});});
+  }
+  if(!groups.length){$("#groups").innerHTML=`<div class="group"><p class="empty">No deliverables match these filters.</p></div>`;return;}
+  $("#groups").innerHTML=groups.map(g=>{
+    const open=S.openGroups[g.key]!==false, done=g.items.filter(d=>st(d)==="Done").length;
+    const showMeeting=groupBy!=="meeting";
+    return `<section class="group" data-key="${esc(g.key)}" data-open="${open}">
+      <button class="gh" aria-expanded="${open}"><svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span class="gt">${esc(g.title)}</span>${g.sub?`<span class="gd">${g.sub}</span>`:""}${g.type?`<span class="chip type">${g.type}</span>`:""}
+        <span class="gc">${done}/${g.items.length} done</span><span class="bar"><i style="width:${Math.round(done/g.items.length*100)}%"></i></span></button>
+      <div class="gbody"><div class="tbl-wrap"><table>
+        <thead><tr><th>Deliverable</th>${showMeeting?"<th>Meeting</th>":""}${groupBy!=="owner"?"<th>Owner</th>":""}<th>Due</th><th>Status</th><th>Remarks</th></tr></thead>
+        <tbody>${g.items.map(d=>`<tr class="${st(d)==="Done"?"done":""}"><td class="task"><span class="tasktext">${esc(d.task)}</span></td>
+          ${showMeeting?`<td><button class="linkbtn" data-goto="${d.m.id}">${esc(d.m.title)}</button><br><span class="asof">${fd(d.m.date)}</span></td>`:""}
+          ${groupBy!=="owner"?`<td>${ownerCell(d)}</td>`:""}<td>${dueCell(d)}</td><td>${statusSelect(d)}</td><td>${remarkCell(d)}</td></tr>`).join("")}</tbody>
+      </table></div></div></section>`}).join("");
+}
+
+/* ---------- team ---------- */
+function refreshOwnerFilter(){
+  const el=$("#d-owner"), cur=el.value;
+  opts(el,"All owners",uniq([...allD().map(d=>ownerOf(d)||"Unassigned")]));
+  el.value=[...el.options].some(o=>o.value===cur)?cur:"";
+}
+function renderRoster(){
+  $("#roster").innerHTML=allPeople().map(p=>`<label><input type="checkbox" data-member="${esc(p)}"${inTeam(p)?" checked":""}><span>${esc(p)}<small>${esc(ROLES[p]||"Added by you")}</small></span></label>`).join("");
+  $("#team-count").textContent=team().length;
+}
+function renderTeam(){
+  const t=$("#t-type").value, c=$("#t-co").value, showDone=$("#t-show-done").checked;
+  const D=allD().filter(d=>(!t||d.m.type===t)&&(!c||d.m.companies.includes(c)));
+  const byDue=(a,b)=>(a.due||"9").localeCompare(b.due||"9");
+  const stats=items=>{const open=items.filter(d=>st(d)!=="Done");return {total:items.length,open:open.length,done:items.length-open.length,overdue:open.filter(d=>d.due&&d.due<TODAY).length,nodate:open.filter(d=>!d.due).length};};
+  const card=p=>{
+    const items=D.filter(d=>ownerOf(d)===p), s=stats(items), list=(showDone?items:items.filter(d=>st(d)!=="Done")).sort(byDue);
+    return `<article class="pcard">
+      <div class="ph"><span class="av">${initials(p)}</span><div><div class="pn">${esc(p)}</div><div class="pr">${esc(ROLES[p]||"Team member")}</div></div></div>
+      <div class="pstats"><div><b>${s.open}</b><span>Open</span></div><div><b>${s.done}</b><span>Done</span></div><div class="${s.overdue?"alert":""}"><b>${s.overdue}</b><span>Overdue</span></div><div><b>${s.nodate}</b><span>No date</span></div></div>
+      ${(()=>{const ap=projects().filter(x=>x.owner===p&&x.status==="Approved"&&x.stage!=="Closed");return ap.length?`<div class="ktxt">Projects: ${ap.map(x=>`<button class="linkbtn" data-open-proj="${esc(x.id)}">${esc(x.name)}</button>`).join(", ")}</div>`:"";})()}
+      <div class="pbar" title="${s.total?Math.round(s.done/s.total*100):0}% done"><i style="width:${s.total?Math.round(s.done/s.total*100):0}%"></i></div>
+      ${list.length?`<ul class="plist">${list.map(d=>{const f=dueFlag(d);return `<li><span>${esc(d.task)}</span><span class="sp" data-s="${st(d)}">${st(d)}</span>
+        <span class="from"><button class="linkbtn" data-goto="${d.m.id}">${esc(d.m.title)}</button> · ${d.due?"Due "+fd(d.due):esc(d.dueNote||"No due date")}${f?` · <span class="chip ${f.cls}">${f.t}</span>`:""}</span></li>`}).join("")}</ul>`
+        :`<p class="empty" style="padding:0">${s.total?"Everything here is done.":"No deliverables assigned yet."}</p>`}
+    </article>`;
+  };
+  const others=uniq(D.map(d=>ownerOf(d)).filter(o=>o&&!inTeam(o)));
+  const unassigned=D.filter(d=>!ownerOf(d));
+  const tS=stats(D.filter(d=>inTeam(ownerOf(d))));
+  $("#team-view").innerHTML=`
+    <div class="sechead"><h2>Our team</h2><span>${team().length} people · ${tS.open} open · ${tS.overdue} overdue · ${tS.total?Math.round(tS.done/tS.total*100):0}% done</span></div>
+    <div class="sumgrid">${team().map(card).join("")}</div>
+    ${unassigned.length?`<div class="sechead"><h2>Unassigned</h2><span>${unassigned.length} deliverable${unassigned.length>1?"s":""} with no owner. Assign them from the Deliverables view or a meeting brief.</span></div>
+      <div class="sumgrid"><article class="pcard"><ul class="plist">${unassigned.map(d=>`<li><span>${esc(d.task)}</span><span class="sp" data-s="${st(d)}">${st(d)}</span><span class="from"><button class="linkbtn" data-goto="${d.m.id}">${esc(d.m.title)}</button> · ${d.due?"Due "+fd(d.due):esc(d.dueNote||"No due date")}</span></li>`).join("")}</ul></article></div>`:""}
+    <div class="sechead"><h2>Other teams</h2><span>Owners outside your team</span></div>
+    <div class="tbl-wrap"><table class="othertbl"><thead><tr><th>Owner</th><th>Role</th><th>Open</th><th>Done</th><th>Overdue</th><th>No date</th></tr></thead>
+      <tbody>${others.map(o=>{const s=stats(D.filter(d=>ownerOf(d)===o));return `<tr><td>${esc(o)}</td><td>${esc(ROLES[o]||"")}</td><td>${s.open}</td><td>${s.done}</td><td>${s.overdue?`<span class="chip bad">${s.overdue}</span>`:0}</td><td>${s.nodate}</td></tr>`}).join("")||`<tr><td colspan="6" class="empty">No owners outside your team.</td></tr>`}</tbody></table></div>`;
+}
+
+/* ---------- projects ---------- */
+const STAGES=["Planning","In progress","Testing","Closed"];
+const SEED_PROJECTS=[
+ {id:"202608-APR-TYM",name:"Live tyre model upgrade",company:"APR",dept:"Race Operations",requester:"Tomás Reyes",email:"t.reyes@apex-demo.test",submitted:"2026-08-18",status:"Approved",stage:"In progress",owner:"Bea Santos",due:"2026-10-09",code:"K7Q-4MX2",
+  desc:"The tyre degradation model uses start-of-race track temperature, so pit windows are mistimed when conditions change.",outcome:"Pit-window calls based on live conditions.",
+  kpi:{metric:"Tyre-life prediction error",unit:"laps",baseline:5,target:1,actual:null,dir:"lower"},
+  files:[{name:"Tyre model v2 — requirements.pdf",date:"2026-08-25",shared:true},{name:"Live temperature feed — test plan.xlsx",date:"2026-09-30",shared:false}],
+  log:[{at:"2026-08-18",text:"Request submitted by Tomás Reyes"},{at:"2026-08-20",text:"Approved by Helena Marsh; owner Bea Santos"},{at:"2026-09-29",text:"Linked to Post-Race Strategy Debrief — Round 18"}]},
+ {id:"202609-APR-SRR",name:"Sponsor ROI reporting",company:"APR",dept:"Commercial",requester:"Claire Dumont",email:"c.dumont@apex-demo.test",submitted:"2026-09-30",status:"Approved",stage:"Planning",owner:"Bea Santos",due:"2026-11-05",code:"R3P-9WDE",
+  desc:"Sponsor value reports are assembled by hand from agency exports and take weeks before each renewal.",outcome:"A repeatable sponsor value report that is ready before board meetings.",
+  kpi:{metric:"Report turnaround",unit:"days",baseline:28,target:7,actual:null,dir:"lower"},
+  files:[],log:[{at:"2026-09-30",text:"Request submitted by Claire Dumont"},{at:"2026-10-01",text:"Approved by Helena Marsh; owner Bea Santos"}]},
+ {id:"202609-APR-FRT",name:"Freight cut-off tracker",company:"APR",dept:"Logistics",requester:"Priya Nandakumar",email:"p.nandakumar@apex-demo.test",submitted:"2026-09-02",status:"Approved",stage:"In progress",owner:"Kenji Arata",due:"2026-10-20",code:"H8N-2TXA",
+  desc:"Late parts miss the air freight cut-off and move to courier at four to five times the rate.",outcome:"Engineering sees cut-off dates per part and gets alerts before they slip.",
+  kpi:{metric:"Courier shipments per flyaway",unit:"shipments",baseline:3,target:1,actual:2,dir:"lower"},
+  files:[{name:"Cut-off calendar — Rounds 20–24.xlsx",date:"2026-09-21",shared:true}],
+  log:[{at:"2026-09-02",text:"Request submitted by Priya Nandakumar"},{at:"2026-09-04",text:"Approved by Helena Marsh; owner Kenji Arata"},{at:"2026-10-01",text:"Interim result logged: 2 courier shipments for Round 20"}]},
+ {id:"202607-APR-CCF",name:"Cost cap forecast automation",company:"APR",dept:"Finance",requester:"Daniel Okafor",email:"d.okafor@apex-demo.test",submitted:"2026-07-06",status:"Approved",stage:"Closed",owner:"Bea Santos",due:"2026-09-15",code:"M2V-7KJR",
+  desc:"The cost cap forecast is rebuilt manually from three spreadsheets every month.",outcome:"Forecast refreshes from source data in half a day.",
+  kpi:{metric:"Time to produce forecast",unit:"days",baseline:3,target:0.5,actual:0.5,dir:"lower"},
+  files:[{name:"Cost cap forecast model.xlsx",date:"2026-09-12",shared:true},{name:"Forecast refresh — user guide.pdf",date:"2026-09-14",shared:true},{name:"Data mapping notes.docx",date:"2026-08-10",shared:false}],
+  log:[{at:"2026-07-06",text:"Request submitted by Daniel Okafor"},{at:"2026-07-08",text:"Approved by Helena Marsh; owner Bea Santos"},{at:"2026-09-15",text:"Closed with actual result: 0.5 days (target met)"}]},
+ {id:"202608-APR-PWB",name:"Pit wall decision board",company:"APR",dept:"Race Operations",requester:"Helena Marsh",email:"h.marsh@apex-demo.test",submitted:"2026-08-11",status:"Approved",stage:"Testing",owner:"Tomás Reyes",due:"2026-09-30",code:"T5C-3YHB",
+  desc:"Safety car decisions take too long on the pit wall because options are discussed live.",outcome:"Pre-agreed decision table shown on the pit wall screen.",
+  kpi:{metric:"Safety car decision time",unit:"seconds",baseline:8,target:3,actual:4,dir:"lower"},
+  files:[{name:"Decision board mockup.png",date:"2026-09-08",shared:true}],
+  log:[{at:"2026-08-11",text:"Request submitted by Helena Marsh"},{at:"2026-08-12",text:"Approved; owner Tomás Reyes"},{at:"2026-09-26",text:"Moved to Testing; interim result 4 seconds"}]},
+ {id:"202609-APA-DCT",name:"Driver contract tracker",company:"APA",dept:"Driver Management",requester:"Marco Bellandi",email:"m.bellandi@apex-demo.test",submitted:"2026-09-29",status:"Pending review",stage:null,owner:null,due:"2026-11-30",code:"W4F-8PLQ",
+  desc:"Contract options, renewal clauses and deadlines live in email threads, so dates get missed.",outcome:"One tracker with alerts 30 days before each contract deadline.",
+  kpi:{metric:"Missed or late contract deadlines per season",unit:"deadlines",baseline:2,target:0,actual:null,dir:"lower"},
+  files:[],log:[{at:"2026-09-29",text:"Request submitted by Marco Bellandi"}]},
+ {id:"202609-APW-HPL",name:"Hybrid parts logbook",company:"APW",dept:"Engineering",requester:"Stefan Vogel",email:"s.vogel@apex-demo.test",submitted:"2026-09-24",status:"Needs info",stage:null,owner:null,due:"2026-12-15",code:"B9G-6NSD",note:"Please add a baseline: how many hours a week are spent updating the logbook today?",
+  desc:"Hybrid component mileage is logged by hand after every session.",outcome:"Automatic mileage log per component.",
+  kpi:{metric:"Hours per week on logbook updates",unit:"hours",baseline:null,target:1,actual:null,dir:"lower",reason:""},
+  files:[],log:[{at:"2026-09-24",text:"Request submitted by Stefan Vogel"},{at:"2026-09-25",text:"Needs info: baseline missing"}]},
+ {id:"202609-APR-MRV",name:"Merchandise store redesign",company:"APR",dept:"Commercial",requester:"Claire Dumont",email:"c.dumont@apex-demo.test",submitted:"2026-09-10",status:"Declined",stage:null,owner:null,due:null,code:"Z2K-5RTM",note:"Outside our department's scope. Redirected to the e-commerce agency.",
+  desc:"Refresh the online merchandise store.",outcome:"Higher online sales.",
+  kpi:{metric:"Online conversion rate",unit:"%",baseline:1.2,target:2,actual:null,dir:"higher"},
+  files:[],log:[{at:"2026-09-10",text:"Request submitted by Claire Dumont"},{at:"2026-09-11",text:"Declined: outside department scope"}]}
+];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const projects=()=>S.projects||(S.projects=clone(SEED_PROJECTS));
+const findP=id=>projects().find(p=>p.id===id);
+let pview="register", openProj=null, lastSubmitted=null, lookupResult=null, pfilter={q:"",stage:"",owner:"",co:""};
+const pState=p=>p.status==="Approved"?p.stage:p.status;
+const fmtNum=v=>v==null||v===""?"—":(+v).toLocaleString("en-US",{maximumFractionDigits:2});
+function kpiProgress(k){
+  if(k.baseline==null||k.target==null||k.actual==null) return null;
+  const span=k.dir==="lower"?k.baseline-k.target:k.target-k.baseline;
+  if(span===0) return 1;
+  const got=k.dir==="lower"?k.baseline-k.actual:k.actual-k.baseline;
+  return Math.max(0,Math.min(1,got/span));
+}
+function kpiBar(k){
+  const pr=kpiProgress(k);
+  if(pr==null) return `<span class="ktxt">${k.baseline==null?"No baseline":"Not measured yet"}</span>`;
+  return `<div style="display:grid;gap:3px"><div class="kbar${pr<1?" partial":""}"><i style="width:${Math.round(pr*100)}%"></i></div><span class="ktxt">${Math.round(pr*100)}% of target gap closed</span></div>`;
+}
+const pOverdue=p=>p.status==="Approved"&&p.stage!=="Closed"&&p.due&&p.due<TODAY;
+const logP=(p,text)=>{p.log.push({at:TODAY,text});};
+function genCode(){const c="ABCDEFGHJKMNPQRSTUVWXYZ23456789";const r=n=>Array.from({length:n},()=>c[Math.floor(Math.random()*c.length)]).join("");return r(3)+"-"+r(4);}
+function abbr(name){return name.replace(/[^A-Za-z0-9 ]/g,"").split(/\s+/).filter(w=>w&&!/^(and|of|the|for|to|a|an)$/i.test(w)).map(w=>w[0]).join("").toUpperCase().slice(0,4)||"PRJ";}
+function makeId(company,name,date){
+  const base=`${date.slice(0,4)}${date.slice(5,7)}-${company}-${abbr(name)}`;
+  let id=base,n=2; while(findP(id)) id=`${base}${n++}`; return id;
+}
+
+function renderProjKPIs(){
+  const P=projects(), active=P.filter(p=>p.status==="Approved"&&p.stage!=="Closed");
+  const closed=P.filter(p=>p.stage==="Closed"), measured=closed.filter(p=>p.kpi.actual!=null);
+  const hit=measured.filter(p=>kpiProgress(p.kpi)===1);
+  const pending=P.filter(p=>p.status==="Pending review"||p.status==="Needs info").length;
+  const overdue=P.filter(pOverdue).length;
+  const withBase=P.filter(p=>p.status!=="Declined"&&p.kpi.baseline!=null).length, eligible=P.filter(p=>p.status!=="Declined").length;
+  $("#kpis").innerHTML=[
+    [active.length,"Active projects"],[pending,"Awaiting approval"],[overdue,"Overdue",overdue>0],
+    [eligible?Math.round(withBase/eligible*100)+"%":"—","Have a baseline"],
+    [closed.length?Math.round(measured.length/closed.length*100)+"%":"—","Closed with measured result"],
+    [measured.length?Math.round(hit.length/measured.length*100)+"%":"—","Closed projects that hit target"]
+  ].map(([v,l,a])=>`<div class="kpi${a?" alert":""}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+}
+function updatePendingCounts(){
+  const n=projects().filter(p=>p.status==="Pending review"||p.status==="Needs info").length;
+  $("#pending-count").textContent=n; $("#queue-count").textContent=n;
+}
+function renderProjects(){
+  updatePendingCounts();
+  document.querySelectorAll("[data-pv]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.pv===pview&&!openProj));
+  const body=$("#proj-body");
+  if(openProj){body.innerHTML=projectPage(findP(openProj));return;}
+  if(pview==="register") body.innerHTML=registerView();
+  else if(pview==="queue") body.innerHTML=queueView();
+  else if(pview==="new") body.innerHTML=newRequestView();
+  else body.innerHTML=requesterView();
+}
+function registerView(){
+  const P=projects();
+  const owners=uniq(P.map(p=>p.owner).filter(Boolean));
+  const list=P.filter(p=>(!pfilter.stage||pState(p)===pfilter.stage)&&(!pfilter.owner||p.owner===pfilter.owner)&&(!pfilter.co||p.company===pfilter.co)&&
+    (!pfilter.q||(p.id+" "+p.name+" "+p.requester).toLowerCase().includes(pfilter.q.toLowerCase())))
+    .sort((a,b)=>b.submitted.localeCompare(a.submitted));
+  const sel=(id,label,vals,cur)=>`<select class="inp" id="${id}" aria-label="${label}"><option value="">${label}</option>${vals.map(v=>`<option${v===cur?" selected":""}>${esc(v)}</option>`).join("")}</select>`;
+  return `<div class="toolbar">
+      <input class="inp search" id="p-search" type="search" placeholder="Search ID, project or requester" value="${esc(pfilter.q)}">
+      ${sel("p-stage","All stages",["Pending review","Needs info",...STAGES,"Declined"],pfilter.stage)}
+      ${sel("p-owner","All owners",owners,pfilter.owner)}
+      ${sel("p-co","All companies",uniq(P.map(p=>p.company)),pfilter.co)}
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Project ID</th><th>Project</th><th>Requester</th><th>Owner</th><th>Stage</th><th>Due</th><th>KPI progress</th></tr></thead>
+      <tbody>${list.map(p=>`<tr class="rowlink" data-open-proj="${esc(p.id)}" tabindex="0">
+        <td class="pid">${esc(p.id)}</td><td><b>${esc(p.name)}</b><br><span class="ktxt">${esc(p.kpi.metric)}</span></td>
+        <td>${esc(p.requester)}<br><span class="chip co">${esc(p.company)}</span></td>
+        <td>${p.owner?`<span class="owner"><span class="av">${initials(p.owner)}</span>${esc(p.owner)}</span>`:`<span class="ktxt">Not assigned</span>`}</td>
+        <td><span class="pill" data-p="${esc(pState(p))}">${esc(pState(p))}</span></td>
+        <td><span class="due">${p.due?fd(p.due):"—"}${pOverdue(p)?`<span class="chip bad">Overdue</span>`:""}</span></td>
+        <td>${p.status==="Declined"?`<span class="ktxt">—</span>`:kpiBar(p.kpi)}</td></tr>`).join("")||`<tr><td colspan="7" class="empty">No projects match these filters.</td></tr>`}</tbody>
+    </table></div>`;
+}
+function queueView(){
+  const Q=projects().filter(p=>p.status==="Pending review"||p.status==="Needs info").sort((a,b)=>a.submitted.localeCompare(b.submitted));
+  return `<p class="notice">New requests from the request form land here. Approve, ask for more information, or decline. A request can't be approved without a baseline or a written reason why it can't be measured yet.</p>
+    <div class="queue" style="margin-top:12px">${Q.length?Q.map(p=>`<article class="qcard${p.status==="Needs info"?" info":""}">
+      <div class="qt"><b>${esc(p.name)}</b><span class="pid">${esc(p.id)}</span><span class="pill" data-p="${esc(p.status)}">${esc(p.status)}</span></div>
+      <p>${esc(p.requester)} · ${esc(p.dept)} · submitted ${fd(p.submitted)}${p.note?` · <b>${esc(p.note)}</b>`:""}</p>
+      <p>${esc(p.desc)}</p>
+      <div class="actions"><button class="btn" data-open-proj="${esc(p.id)}">Review</button></div>
+    </article>`).join(""):`<p class="empty">No requests waiting. New submissions appear here.</p>`}</div>`;
+}
+function newRequestView(){
+  if(lastSubmitted){const p=findP(lastSubmitted); if(p) return `<div class="confirm">
+    <b>Request submitted</b>
+    <span>This is what the requester's confirmation email would contain.</span>
+    <span>Project ID <span class="codebox">${esc(p.id)}</span></span>
+    <span>Access code <span class="codebox">${esc(p.code)} <button class="linkbtn" data-copy="${esc(p.code)}">Copy</button></span></span>
+    <span style="font-size:13px;color:var(--muted)">They use both to check progress in the Requester view. The request is now in the approval queue.</span>
+    <div class="actions"><button class="btn" data-open-proj="${esc(p.id)}">Open the request</button><button class="btn ghost" id="another">Submit another</button></div></div>`;}
+  const coOpts=Object.entries(COMPANIES).map(([c,n])=>`<option value="${c}">${c} · ${n}</option>`).join("");
+  const deptOpts=["Race Operations","Engineering","Commercial","Finance","Legal","Driver Management","Logistics"].map(d=>`<option>${d}</option>`).join("");
+  return `<p class="notice">This form stands in for your Microsoft Form. In the real build, Power Automate reads each submission, creates the Project ID and folder, and adds it to the approval queue.</p>
+  <form class="box" id="req-form" style="margin-top:12px" novalidate>
+    <div class="fgrid">
+      <div class="formsec" style="border-top:0;padding-top:0;margin-top:0">Requester</div>
+      <div class="field"><label for="rq-name">Your name</label><input class="inp" id="rq-name" required placeholder="Full name"></div>
+      <div class="field"><label for="rq-email">Email</label><input class="inp" id="rq-email" type="email" required placeholder="name@company.com"><span class="help">Any email works; no Microsoft account needed.</span></div>
+      <div class="field"><label for="rq-co">Company</label><select class="inp" id="rq-co">${coOpts}</select></div>
+      <div class="field"><label for="rq-dept">Department</label><select class="inp" id="rq-dept">${deptOpts}</select></div>
+      <div class="formsec">Project</div>
+      <div class="field full"><label for="rq-pname">Project name</label><input class="inp" id="rq-pname" required placeholder="e.g. Vehicle Inspection Tanza"><span class="help" id="id-preview">Project ID preview appears here.</span></div>
+      <div class="field full"><label for="rq-desc">What problem should this solve?</label><textarea class="inp" id="rq-desc" required placeholder="Describe the current process and what goes wrong"></textarea></div>
+      <div class="field full"><label for="rq-out">What does success look like?</label><input class="inp" id="rq-out" placeholder="e.g. Inspection reports ready the same day"></div>
+      <div class="field"><label for="rq-due">Requested completion date</label><input class="inp" id="rq-due" type="date" min="${TODAY}"></div>
+      <div class="formsec">Measurement</div>
+      <div class="field full"><label for="rq-metric">What will we measure?</label><input class="inp" id="rq-metric" required placeholder="e.g. Hours per week spent on inspection reports"></div>
+      <div class="field"><label for="rq-unit">Unit</label><input class="inp" id="rq-unit" placeholder="hours, days, errors, %"></div>
+      <div class="field"><label for="rq-dir">Better is</label><select class="inp" id="rq-dir"><option value="lower">Lower</option><option value="higher">Higher</option></select></div>
+      <div class="field"><label for="rq-base">Current value (baseline)</label><input class="inp" id="rq-base" type="number" step="any" placeholder="Leave blank if unknown"></div>
+      <div class="field"><label for="rq-target">Target value</label><input class="inp" id="rq-target" type="number" step="any" required></div>
+      <div class="field full"><label for="rq-reason">No baseline yet? Say why</label><input class="inp" id="rq-reason" placeholder="e.g. Process is new; we'll measure for 2 weeks first"><span class="help">Requests need a baseline or a reason before they can be approved.</span></div>
+    </div>
+    <div class="actions"><button class="btn" type="submit">Submit request</button><span class="err" id="rq-err" role="alert"></span></div>
+  </form>`;
+}
+function requesterView(){
+  const r=lookupResult;
+  let res="";
+  if(r==="nomatch") res=`<p class="err">That Project ID and access code don't match. Check the confirmation email and try again.</p>`;
+  else if(r){const p=findP(r); if(p) res=requesterCard(p);}
+  const ex=findP("202609-APR-FRT");
+  return `<div class="box lookup">
+      <h3>Check your project</h3>
+      <p class="hint" style="margin:0">This is what requesters see. They get status and finished files only. Internal notes, meetings and draft files stay hidden.</p>
+      <form id="lookup" class="fgrid">
+        <div class="field"><label for="lk-id">Project ID</label><input class="inp" id="lk-id" placeholder="e.g. 202609-APR-FRT" autocomplete="off"></div>
+        <div class="field"><label for="lk-code">Access code</label><input class="inp" id="lk-code" placeholder="e.g. ABC-1234" autocomplete="off"></div>
+        <div class="actions field full"><button class="btn" type="submit">View status</button><button class="linkbtn" type="button" id="lk-demo">Try the demo: ${esc(ex.id)} / ${esc(ex.code)}</button></div>
+      </form>
+    </div><div style="margin-top:14px">${res}</div>`;
+}
+function stepper(p){
+  const steps=["Submitted","Approved",...STAGES];
+  if(p.status==="Declined") return `<ol class="stepper"><li class="done">Submitted</li><li class="stop now">Declined</li></ol>`;
+  const idx=p.status==="Approved"?1+STAGES.indexOf(p.stage)+1:0;
+  return `<ol class="stepper">${steps.map((s,i)=>`<li class="${i<idx?"done":i===idx?"now":""}">${s}${i===0&&p.status!=="Approved"?`<br>${esc(p.status)}`:""}</li>`).join("")}</ol>`;
+}
+function requesterCard(p){
+  const shared=p.files.filter(f=>f.shared&&(p.stage==="Closed"||true));
+  return `<div class="box">
+    <h3>${esc(p.name)} <span class="pill" data-p="${esc(pState(p))}">${esc(pState(p))}</span></h3>
+    ${stepper(p)}
+    <dl class="kv"><dt>Project ID</dt><dd class="pid">${esc(p.id)}</dd><dt>Handled by</dt><dd>${esc(p.owner||"Not assigned yet")}</dd>
+      <dt>Target date</dt><dd>${p.due?fdl(p.due):"To be agreed"}</dd><dt>Last update</dt><dd>${fd(p.log[p.log.length-1].at)} · ${esc(p.log[p.log.length-1].text)}</dd>
+      ${p.note&&p.status!=="Approved"?`<dt>Message</dt><dd><b>${esc(p.note)}</b></dd>`:""}
+      <dt>Measure</dt><dd>${esc(p.kpi.metric)}: ${fmtNum(p.kpi.baseline)} → ${fmtNum(p.kpi.target)} ${esc(p.kpi.unit||"")}${p.kpi.actual!=null?` (now ${fmtNum(p.kpi.actual)})`:""}</dd></dl>
+    <div><b style="font-size:14px">Finished files</b>${shared.length?`<ul class="flist">${shared.map(f=>`<li><span class="fn">${esc(f.name)}</span><span class="fd">${fd(f.date)}</span></li>`).join("")}</ul>`:`<p class="ktxt">No finished files shared yet.</p>`}</div>
+  </div>`;
+}
+function projectPage(p){
+  if(!p) return `<p class="empty">Project not found.</p>`;
+  const k=p.kpi, pr=kpiProgress(k), linked=MEETINGS.filter(m=>m.project===p.id);
+  const linkedD=allD().filter(d=>linked.some(m=>m.id===d.m.id));
+  const ownerSel=`<select class="inp" id="pp-owner" style="width:auto"><option value="">Choose owner</option>${team().map(o=>`<option${o===p.owner?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  const canApprove=k.baseline!=null||(k.reason&&k.reason.trim());
+  let review="";
+  if(p.status==="Pending review"||p.status==="Needs info"){
+    review=`<div class="box" style="border-color:var(--violet)">
+      <h3>Review request <small>Decide before work starts</small></h3>
+      ${canApprove?"":`<p class="err" style="margin:0">No baseline and no reason given. Ask for more information before approving.</p>`}
+      <div class="fgrid">
+        <div class="field"><label for="pp-owner">Owner</label>${ownerSel}</div>
+        <div class="field"><label for="rv-due">Agreed due date</label><input class="inp" id="rv-due" type="date" value="${p.due||""}"></div>
+        <div class="field full"><label for="rv-note">Message to requester (needed for Needs info or Decline)</label><input class="inp" id="rv-note" placeholder="e.g. Please add how many hours this takes today"></div>
+      </div>
+      <div class="actions"><button class="btn ok" data-review="approve"${canApprove?"":" disabled"}>Approve</button><button class="btn warnb" data-review="info">Needs info</button><button class="btn badb" data-review="decline">Decline</button><span class="err" id="rv-err" role="alert"></span></div>
+    </div>`;
+  }
+  const verdict=pr==null?`<span class="verdict none">${k.baseline==null?"No baseline recorded":"Actual result not measured yet"}</span>`
+    :pr===1?`<span class="verdict ok">Target met</span>`:`<span class="verdict mid">${Math.round(pr*100)}% of the gap closed</span>`;
+  return `<button class="back" id="back">← Back to ${pview==="queue"?"approval queue":"project register"}</button>
+  <div class="eyebrow">Project</div>
+  <h1 class="ptitle">${esc(p.name)}</h1>
+  <div class="meta"><span class="pid">${esc(p.id)}</span><span class="pill" data-p="${esc(pState(p))}">${esc(pState(p))}</span><span class="chip co">${esc(p.company)} · ${esc(COMPANIES[p.company]||"")}</span><span class="chip">${esc(p.dept)}</span>${pOverdue(p)?`<span class="chip bad">Overdue</span>`:""}</div>
+  <div style="margin:14px 0">${stepper(p)}</div>
+  <div class="pgrid">
+    <div style="display:grid;gap:16px;min-width:0">
+      ${review}
+      <div class="box"><h3>Request</h3>
+        <dl class="kv"><dt>Requester</dt><dd>${esc(p.requester)} · <span class="ktxt">${esc(p.email)}</span></dd><dt>Submitted</dt><dd>${fdl(p.submitted)}</dd>
+        <dt>Problem</dt><dd>${esc(p.desc)}</dd><dt>Success</dt><dd>${esc(p.outcome||"—")}</dd>
+        ${p.note?`<dt>Note</dt><dd><b>${esc(p.note)}</b></dd>`:""}</dl></div>
+      <div class="box"><h3>Measurement <small>${esc(k.metric)} (${k.dir==="lower"?"lower":"higher"} is better)</small></h3>
+        <div class="kpibig"><div><b>${fmtNum(k.baseline)}</b><span>Baseline ${esc(k.unit||"")}</span></div><div><b>${fmtNum(k.target)}</b><span>Target ${esc(k.unit||"")}</span></div><div><b>${fmtNum(k.actual)}</b><span>Actual ${esc(k.unit||"")}</span></div></div>
+        ${pr!=null?`<div class="kbar${pr<1?" partial":""}" style="height:10px"><i style="width:${Math.round(pr*100)}%"></i></div>`:""}
+        <div class="actions">${verdict}${k.reason&&k.baseline==null?`<span class="ktxt">Reason: ${esc(k.reason)}</span>`:""}</div>
+        ${p.status==="Approved"?`<div class="fgrid">
+          <div class="field"><label for="pp-base">Baseline</label><input class="inp" id="pp-base" type="number" step="any" value="${k.baseline??""}"></div>
+          <div class="field"><label for="pp-actual">Actual result</label><input class="inp" id="pp-actual" type="number" step="any" value="${k.actual??""}" placeholder="Log interim or final value"></div>
+        </div><div class="actions"><button class="btn ghost" id="pp-save-kpi">Save measurement</button></div>`:""}
+      </div>
+      <div class="box"><h3>Linked meetings <small>${linked.length}</small></h3>
+        ${linked.length?`<ul class="flist">${linked.map(m=>`<li><span class="fn"><button class="linkbtn" data-goto-meeting="${m.id}" style="font-size:13.5px">${esc(m.title)}</button></span><span class="fd">${fd(m.date)}</span></li>`).join("")}</ul>
+          ${linkedD.length?`<div class="tbl-wrap"><table style="min-width:560px"><thead><tr><th>Deliverable from meetings</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>${linkedD.map(d=>`<tr><td>${esc(d.task)}</td><td>${esc(ownerOf(d)||"Unassigned")}</td><td>${d.due?fd(d.due):"—"}</td><td><span class="sp" data-s="${st(d)}" style="font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 8px">${st(d)}</span></td></tr>`).join("")}</tbody></table></div>`:""}`
+          :`<p class="ktxt">No meeting briefs linked yet. Tag a meeting with this Project ID to link it.</p>`}
+      </div>
+    </div>
+    <div style="display:grid;gap:16px;min-width:0">
+      ${p.status==="Approved"?`<div class="box"><h3>Status</h3>
+        <div class="field"><label for="pp-stage">Stage</label><select class="inp" id="pp-stage">${STAGES.map(s=>`<option${s===p.stage?" selected":""}>${s}</option>`).join("")}</select></div>
+        <div class="field"><label>Owner</label>${ownerSel}</div>
+        <div class="field"><label for="pp-due">Due date</label><input class="inp" id="pp-due" type="date" value="${p.due||""}"></div>
+        <span class="err" id="pp-err" role="alert"></span>
+        <p class="hint" style="margin:0">A project can't move to Closed until its actual result is logged.</p></div>`:""}
+      <div class="box"><h3>Requester access</h3>
+        <dl class="kv"><dt>Project ID</dt><dd class="pid">${esc(p.id)}</dd><dt>Access code</dt><dd><span class="pid">${esc(p.code)}</span> <button class="linkbtn" data-copy="${esc(p.code)}">Copy</button></dd></dl>
+        <button class="btn ghost" data-preview-req="${esc(p.id)}">Preview requester view</button></div>
+      <div class="box"><h3>Files <small>${p.files.length}</small></h3>
+        ${p.files.length?`<ul class="flist">${p.files.map((f,i)=>`<li><span class="fn">${esc(f.name)}</span><span class="fd">${fd(f.date)}</span><label><input type="checkbox" data-share="${i}"${f.shared?" checked":""}> Share with requester</label></li>`).join("")}</ul>`:`<p class="ktxt">No files yet.</p>`}
+        <form class="addrow" id="add-file"><input class="inp" id="file-name" placeholder="File name or link" aria-label="File name"><button class="btn ghost" type="submit">Add file</button></form>
+        <p class="hint" style="margin:0">In the real build, files come from the project's SharePoint folder automatically.</p></div>
+      <div class="box"><h3>Activity</h3><ul class="log">${[...p.log].reverse().map(l=>`<li><time>${fd(l.at)}</time><span>${esc(l.text)}</span></li>`).join("")}</ul></div>
+    </div>
+  </div>`;
+}
+function rerenderProjects(){save(); renderProjKPIs(); renderProjects();}
+
+/* ---------- wiring ---------- */
+function renderAll(){if(!$("#view-proj").hidden){renderProjKPIs();renderProjects();renderRoster();updatePendingCounts();return;}renderKPIs();updatePendingCounts();renderRoster();refreshOwnerFilter();renderList();renderBrief();if(!$("#view-deliv").hidden)renderGroups();if(!$("#view-team").hidden)renderTeam();}
+function setView(v){
+  const map={meetings:["#view-meetings","#tab-meetings"],deliverables:["#view-deliv","#tab-deliv"],team:["#view-team","#tab-team"],projects:["#view-proj","#tab-proj"]};
+  Object.entries(map).forEach(([k,[view,tab]])=>{$(view).hidden=k!==v; $(tab).setAttribute("aria-pressed",k===v);});
+  if(v==="deliverables") renderGroups();
+  if(v==="team") renderTeam();
+  if(v==="projects"){renderProjKPIs(); renderProjects();} else renderKPIs();
+  try{history.replaceState(null,"","#"+v)}catch(e){}
+}
+const types=uniq(MEETINGS.map(m=>m.type)), cos=Object.keys(COMPANIES);
+opts($("#f-type"),"All types",types); opts($("#f-co"),"All companies",cos);
+opts($("#f-dept"),"All departments",uniq(MEETINGS.flatMap(m=>m.depts))); opts($("#f-person"),"All people",uniq(MEETINGS.flatMap(m=>m.people)));
+opts($("#d-status"),"All statuses",STATUSES); refreshOwnerFilter();
+opts($("#t-type"),"All types",uniq(MEETINGS.map(m=>m.type))); opts($("#t-co"),"All companies",Object.keys(COMPANIES));
+opts($("#d-type"),"All types",types); opts($("#d-co"),"All companies",cos);
+
+["#m-search","#f-type","#f-co","#f-dept","#f-person"].forEach(s=>$(s).addEventListener("input",renderList));
+["#d-search","#d-status","#d-owner","#d-type","#d-co","#d-hide-done"].forEach(s=>$(s).addEventListener("input",renderGroups));
+$("#tab-meetings").onclick=()=>setView("meetings");
+$("#tab-deliv").onclick=()=>setView("deliverables");
+$("#tab-team").onclick=()=>setView("team");
+$("#tab-proj").onclick=()=>{openProj=null; setView("projects");};
+document.querySelector(".subnav").addEventListener("click",e=>{const b=e.target.closest("[data-pv]"); if(!b)return; pview=b.dataset.pv; openProj=null; renderProjects();});
+const openProject=id=>{openProj=id; if($("#view-proj").hidden) setView("projects"); else renderProjects(); scrollTo({top:0});};
+document.addEventListener("click",e=>{const o=e.target.closest("[data-open-proj]"); if(o){openProject(o.dataset.openProj);}});
+const PB=$("#proj-body");
+PB.addEventListener("keydown",e=>{const r=e.target.closest("tr.rowlink"); if(r&&e.key==="Enter") openProject(r.dataset.openProj);});
+PB.addEventListener("input",e=>{
+  const id=e.target.id;
+  if(id==="p-search"){pfilter.q=e.target.value; const pos=e.target.selectionStart; renderProjects(); const s=$("#p-search"); s.focus(); s.setSelectionRange(pos,pos);}
+  if(id==="rq-pname"||id==="rq-co"){const n=$("#rq-pname").value.trim(); $("#id-preview").textContent=n?`Project ID will be ${makeId($("#rq-co").value,n,TODAY)}`:"Project ID preview appears here.";}
+});
+PB.addEventListener("change",e=>{
+  const id=e.target.id, p=openProj&&findP(openProj);
+  if(id==="p-stage"){pfilter.stage=e.target.value; renderProjects();}
+  if(id==="p-owner"){pfilter.owner=e.target.value; renderProjects();}
+  if(id==="p-co"){pfilter.co=e.target.value; renderProjects();}
+  if(!p) return;
+  if(id==="pp-stage"){
+    const v=e.target.value;
+    if(v==="Closed"&&p.kpi.actual==null){$("#pp-err").textContent="Log the actual result under Measurement before closing."; e.target.value=p.stage; return;}
+    logP(p,`Stage changed from ${p.stage} to ${v}`+(v==="Closed"?`; closed with actual ${fmtNum(p.kpi.actual)} ${p.kpi.unit||""}`:"")); p.stage=v; rerenderProjects();
+  }
+  if(id==="pp-owner"&&p.status==="Approved"){p.owner=e.target.value||null; logP(p,`Owner changed to ${p.owner||"nobody"}`); rerenderProjects();}
+  if(id==="pp-due"&&p.status==="Approved"){p.due=e.target.value||null; logP(p,`Due date changed to ${p.due?fd(p.due):"none"}`); rerenderProjects();}
+  if(e.target.matches("[data-share]")){const f=p.files[+e.target.dataset.share]; f.shared=e.target.checked; logP(p,`${f.shared?"Shared":"Unshared"} file with requester: ${f.name}`); rerenderProjects();}
+});
+PB.addEventListener("click",async e=>{
+  const p=openProj&&findP(openProj);
+  if(e.target.closest("#back")){openProj=null; renderProjects(); return;}
+  const cp=e.target.closest("[data-copy]"); if(cp){try{await navigator.clipboard.writeText(cp.dataset.copy); cp.textContent="Copied";}catch(err){cp.textContent="Select and copy";} return;}
+  const gm=e.target.closest("[data-goto-meeting]"); if(gm){current=gm.dataset.gotoMeeting; setView("meetings"); renderAll(); scrollTo({top:0}); return;}
+  const pr=e.target.closest("[data-preview-req]"); if(pr){lookupResult=pr.dataset.previewReq; pview="requester"; openProj=null; renderProjects(); return;}
+  if(e.target.closest("#another")){lastSubmitted=null; renderProjects(); return;}
+  if(e.target.closest("#lk-demo")){$("#lk-id").value="202609-APR-FRT"; $("#lk-code").value=findP("202609-APR-FRT").code; return;}
+  if(p&&e.target.closest("#pp-save-kpi")){
+    const b=$("#pp-base").value, a=$("#pp-actual").value;
+    const nb=b===""?null:+b, na=a===""?null:+a;
+    if(nb!==p.kpi.baseline){p.kpi.baseline=nb; logP(p,`Baseline set to ${fmtNum(nb)} ${p.kpi.unit||""}`);}
+    if(na!==p.kpi.actual){p.kpi.actual=na; logP(p,`Result logged: ${fmtNum(na)} ${p.kpi.unit||""}`);}
+    rerenderProjects(); return;
+  }
+  const rv=e.target.closest("[data-review]");
+  if(p&&rv){
+    const act=rv.dataset.review, note=$("#rv-note").value.trim(), owner=$("#pp-owner").value, due=$("#rv-due").value;
+    if(act==="approve"){
+      if(!owner){$("#rv-err").textContent="Choose an owner before approving."; return;}
+      p.status="Approved"; p.stage="Planning"; p.owner=owner; p.due=due||p.due; p.note=null;
+      logP(p,`Approved; owner ${owner}`);
+    }else{
+      if(!note){$("#rv-err").textContent=act==="info"?"Tell the requester what's missing.":"Give the requester a reason."; return;}
+      p.status=act==="info"?"Needs info":"Declined"; p.note=note;
+      logP(p,`${p.status}: ${note}`);
+    }
+    rerenderProjects(); return;
+  }
+});
+PB.addEventListener("submit",e=>{
+  e.preventDefault();
+  if(e.target.id==="add-file"){const p=findP(openProj); const n=$("#file-name").value.trim(); if(!n)return; p.files.push({name:n,date:TODAY,shared:false}); logP(p,`File added: ${n}`); rerenderProjects(); return;}
+  if(e.target.id==="lookup"){
+    const id=$("#lk-id").value.trim().toUpperCase(), code=$("#lk-code").value.trim().toUpperCase();
+    const p=findP(id); lookupResult=p&&p.code===code?p.id:"nomatch"; renderProjects(); return;
+  }
+  if(e.target.id==="req-form"){
+    const v=i=>$(i).value.trim();
+    const need=[["#rq-name","your name"],["#rq-email","an email"],["#rq-pname","a project name"],["#rq-desc","the problem"],["#rq-metric","what to measure"],["#rq-target","a target value"]].filter(([i])=>!v(i));
+    if(need.length){$("#rq-err").textContent="Please add "+need.map(n=>n[1]).join(", ")+"."; $(need[0][0]).focus(); return;}
+    if(!/^\S+@\S+\.\S+$/.test(v("#rq-email"))){$("#rq-err").textContent="Enter a valid email address."; $("#rq-email").focus(); return;}
+    const company=$("#rq-co").value, name=v("#rq-pname");
+    const p={id:makeId(company,name,TODAY),name,company,dept:$("#rq-dept").value,requester:v("#rq-name"),email:v("#rq-email"),submitted:TODAY,
+      status:"Pending review",stage:null,owner:null,due:v("#rq-due")||null,code:genCode(),desc:v("#rq-desc"),outcome:v("#rq-out"),
+      kpi:{metric:v("#rq-metric"),unit:v("#rq-unit"),baseline:v("#rq-base")===""?null:+v("#rq-base"),target:+v("#rq-target"),actual:null,dir:$("#rq-dir").value,reason:v("#rq-reason")},
+      files:[],log:[{at:TODAY,text:`Request submitted by ${v("#rq-name")}`}]};
+    projects().push(p); lastSubmitted=p.id; rerenderProjects();
+  }
+});
+["#t-type","#t-co","#t-show-done"].forEach(s=>$(s).addEventListener("input",renderTeam));
+$("#d-team-only").addEventListener("input",renderGroups);
+const togglePanel=open=>{$("#team-panel").hidden=!open; $("#open-team-panel").setAttribute("aria-expanded",open);};
+$("#open-team-panel").onclick=()=>togglePanel($("#team-panel").hidden);
+$("#close-team-panel").onclick=()=>togglePanel(false);
+$("#roster").addEventListener("change",e=>{
+  const p=e.target.dataset.member; if(!p)return;
+  const t=new Set(team()); e.target.checked?t.add(p):t.delete(p);
+  S.team=allPeople().filter(x=>t.has(x)); save(); renderAll();
+});
+$("#add-member").addEventListener("submit",e=>{
+  e.preventDefault(); const n=$("#new-member").value.trim().replace(/\s+/g," "); if(!n)return;
+  if(!allPeople().includes(n)) S.extra=[...(S.extra||[]),n];
+  S.team=[...new Set([...team(),n])]; $("#new-member").value=""; save(); renderAll();
+});
+$("#view-team").addEventListener("click",e=>{const go=e.target.closest("[data-goto]"); if(go){current=go.dataset.goto; setView("meetings"); renderList(); renderBrief(); scrollTo({top:0});}});
+$("#mlist").addEventListener("click",e=>{const b=e.target.closest("[data-m]"); if(!b)return; current=b.dataset.m; editingTags=false; renderList(); renderBrief(); if(innerWidth<860) $("#brief").scrollIntoView({behavior:"smooth"});});
+$("#d-group").addEventListener("click",e=>{const b=e.target.closest("[data-g]"); if(!b)return; groupBy=b.dataset.g; document.querySelectorAll("#d-group button").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderGroups();});
+$("#d-toggle-all").onclick=()=>{
+  const secs=[...document.querySelectorAll(".group[data-key]")]; const anyOpen=secs.some(s=>s.dataset.open==="true");
+  secs.forEach(s=>S.openGroups[s.dataset.key]=!anyOpen); save(); renderGroups(); $("#d-toggle-all").textContent=anyOpen?"Expand all":"Collapse all";
+};
+$("#groups").addEventListener("click",e=>{
+  const g=e.target.closest("button.gh"); if(g){const sec=g.parentElement; const open=sec.dataset.open!=="true"; sec.dataset.open=open; g.setAttribute("aria-expanded",open); S.openGroups[sec.dataset.key]=open; save(); return;}
+  const go=e.target.closest("[data-goto]"); if(go){current=go.dataset.goto; setView("meetings"); renderList(); renderBrief(); scrollTo({top:0});}
+});
+document.addEventListener("change",e=>{
+  if(e.target.matches("select.owner-select")){const d=allD().find(x=>x.id===e.target.dataset.id); S.owner[d.id]=e.target.value||null; if(S.owner[d.id]===d.owner) delete S.owner[d.id]; save(); renderAll(); return;}
+  if(e.target.matches("select.status")){S.status[e.target.dataset.id]=e.target.value; save(); renderAll();}
+});
+document.addEventListener("input",e=>{if(e.target.matches("textarea.remark")){S.remarks[e.target.dataset.id]=e.target.value; save(); document.querySelectorAll(`textarea.remark[data-id="${e.target.dataset.id}"]`).forEach(t=>{if(t!==e.target)t.value=e.target.value});}});
+$("#brief").addEventListener("submit",e=>{
+  if(e.target.id!=="newc")return; e.preventDefault();
+  const text=$("#c-text").value.trim(); if(!text)return;
+  const who=$("#c-who").value.trim()||"Guest"; S.lastName=who;
+  const now=new Date(); const at=`${MON[now.getMonth()]} ${now.getDate()}, ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  (S.comments[current]=S.comments[current]??[...(MEETINGS.find(x=>x.id===current).comments||[])]).push({who,text,at}); save(); renderBrief();
+});
+$("#brief").addEventListener("click",e=>{
+  if(e.target.closest("#edit-tags")){editingTags=!editingTags; renderBrief(); return;}
+  if(e.target.closest("#revert-tags")){delete S.tags[current]; save(); applyTags(); refreshFilters(); renderAll(); return;}
+  const rm=e.target.closest("[data-tag-remove]"); if(rm){const f=rm.dataset.tagRemove,v=rm.dataset.val; setTag(f,cur=>{cur[f]=cur[f].filter(x=>x!==v)}); return;}
+  const ad=e.target.closest("[data-tag-add]"); if(ad){const f=ad.dataset.tagAdd; addTag(f,document.querySelector(`[data-tag-input="${f}"]`).value); return;}
+});
+$("#brief").addEventListener("keydown",e=>{const i=e.target.closest("[data-tag-input]"); if(i&&e.key==="Enter"){e.preventDefault(); addTag(i.dataset.tagInput,i.value);}});
+$("#brief").addEventListener("click",e=>{const b=e.target.closest("[data-del]"); if(!b)return; (S.comments[current]=S.comments[current]??[...(MEETINGS.find(x=>x.id===current).comments||[])]).splice(+b.dataset.del,1); save(); renderBrief();});
+let armed=false;
+$("#reset").onclick=e=>{
+  if(!armed){armed=true; e.target.textContent="Click again to confirm"; setTimeout(()=>{armed=false; e.target.textContent="Reset demo"},3000); return;}
+  S={status:{},remarks:{},comments:{},openGroups:{},owner:{},team:null,extra:[],tags:{}}; openProj=null; lastSubmitted=null; lookupResult=null; save(); applyTags(); refreshFilters(); armed=false; e.target.textContent="Reset demo"; renderAll();
+};
+
+refreshFilters();
+renderAll();
+if(location.hash==="#deliverables") setView("deliverables"); else if(location.hash==="#team") setView("team"); else if(location.hash==="#projects") setView("projects");
+</script>
