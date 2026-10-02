@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Apex Meeting Briefs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -23,6 +24,7 @@
   --ok:#5fd394; --ok-soft:#173527; --warn:#f2b84b; --warn-soft:#3a2d12; --bad:#ff7d74; --bad-soft:#3d1c1a; --idle:#a5afc2; --idle-soft:#262d3b; --violet:#c49bff; --violet-soft:#2d2243;
   color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -1030,6 +1032,7 @@ function renderAll(){if(!$("#view-proj").hidden){renderProjKPIs();renderProjects
 function setView(v){
   const map={meetings:["#view-meetings","#tab-meetings"],deliverables:["#view-deliv","#tab-deliv"],team:["#view-team","#tab-team"],projects:["#view-proj","#tab-proj"]};
   Object.entries(map).forEach(([k,[view,tab]])=>{$(view).hidden=k!==v; $(tab).setAttribute("aria-pressed",k===v);});
+  try{$(map[v][1]).scrollIntoView({block:"nearest",inline:"nearest"})}catch(e){}
   if(v==="deliverables") renderGroups();
   if(v==="team") renderTeam();
   if(v==="projects"){renderProjKPIs(); renderProjects();} else renderKPIs();
@@ -1179,3 +1182,5 @@ refreshFilters();
 renderAll();
 if(location.hash==="#deliverables") setView("deliverables"); else if(location.hash==="#team") setView("team"); else if(location.hash==="#projects") setView("projects");
 </script>
+
+</body></html>
